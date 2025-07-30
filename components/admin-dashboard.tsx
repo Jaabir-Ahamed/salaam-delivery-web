@@ -57,7 +57,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
     setIsLoading(true)
     try {
       // Load statistics
-      const seniorsResult = await SupabaseService.getSeniors(false)
+      const seniorsResult = await SupabaseService.getSeniors({ active: false })
       const volunteersResult = await SupabaseService.getVolunteers()
       const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
       const deliveriesResult = await SupabaseService.getDeliveries(undefined, currentMonth)

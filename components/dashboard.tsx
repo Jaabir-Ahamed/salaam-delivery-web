@@ -108,7 +108,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       .toUpperCase()
   }
 
-  const profilePictureUrl = user?.profile_picture ? SupabaseService.getProfilePictureUrl(user.profile_picture) : null
+  const profilePictureUrl = null // Profile pictures not implemented yet
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-orange-50">

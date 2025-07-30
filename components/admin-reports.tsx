@@ -54,10 +54,10 @@ export function AdminReports({ onNavigate }: AdminReportsProps) {
       }
       // For each volunteer, fetch their deliveries
       const report = await Promise.all(
-        volunteers.map(async (vol) => {
+        volunteers.map(async (vol: any) => {
           const { data: deliveries } = await SupabaseService.getDeliveries(vol.id)
           const seniors = deliveries
-            ? Array.from(new Set(deliveries.map((d) => d.senior?.name).filter(Boolean)))
+            ? Array.from(new Set(deliveries.map((d: any) => d.senior?.name).filter(Boolean)))
             : []
           return {
             id: vol.id,

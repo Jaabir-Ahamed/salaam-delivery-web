@@ -217,6 +217,9 @@ export function CSVImport({ onImportComplete }: CSVImportProps) {
         race_ethnicity: row.race_ethnicity || null,
         health_conditions: row.health_conditions || null,
         address: row.address.trim(),
+        building: null, // Add missing required field
+        unit_apt: null, // Add missing required field
+        zip_code: null, // Add missing required field
         dietary_restrictions: row.dietary_restrictions || null,
         phone: row.phone || null,
         emergency_contact: row.emergency_contact || null,
@@ -234,12 +237,20 @@ export function CSVImport({ onImportComplete }: CSVImportProps) {
         const batch = seniorsData.slice(i, i + batchSize)
         
         try {
-          const result = await SupabaseService.bulkCreateSeniors(batch)
-          if (result.error) {
-            results.failed += batch.length
-            results.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${result.error.message}`)
-          } else {
-            results.successful += batch.length
+          // Process each senior individually since bulkCreateSeniors doesn't exist
+          for (const senior of batch) {
+            try {
+              const result = await SupabaseService.createSenior(senior)
+              if (result.error) {
+                results.failed += 1
+                results.errors.push(`Senior ${senior.name}: ${result.error}`)
+              } else {
+                results.successful += 1
+              }
+            } catch (error) {
+              results.failed += 1
+              results.errors.push(`Senior ${senior.name}: ${(error as Error).message}`)
+            }
           }
         } catch (error) {
           results.failed += batch.length
@@ -300,16 +311,24 @@ Maria Garcia,68,family,2,1,Hispanic,None,456 Oak Ave,Gluten-free,555-0125,Carlos
   const handleSequoiaCommonImport = async (data: any[]) => {
     const seniors = data.map((row, index) => ({
       name: `${row['First Name'] || ''} ${row['Last Name'] || ''}`.trim() || `Resident ${index + 1}`,
+      age: null, // Add missing required field
+      household_type: "single" as const, // Add missing required field
+      family_adults: 1, // Add missing required field
+      family_children: 0, // Add missing required field
+      race_ethnicity: null, // Add missing required field
+      health_conditions: null, // Add missing required field
       address: `${row['Street']}, Unit ${row['# Unit/Apt']}, Fremont, CA ${row['# #z Code']}`,
       unit_apt: row['# Unit/Apt'] || '',
       zip_code: row['# #z Code'] || '94538',
       building: row['Building'] || 'Sequoia Common',
-      street: row['Street'] || '40798 Fremont Blvd',
       phone: null,
-      email: null,
+      emergency_contact: null,
+      has_smartphone: false, // Add missing required field
+      preferred_language: "english", // Add missing required field
+      needs_translation: false, // Add missing required field
+      delivery_method: "doorstep" as const, // Add missing required field
       dietary_restrictions: row['Special Instructions'] || null,
       special_instructions: row['Reference'] || null,
-      emergency_contact: null,
       active: true
     })).filter(senior => senior.name !== 'Resident' && senior.unit_apt);
 

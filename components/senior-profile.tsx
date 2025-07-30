@@ -1,0 +1,323 @@
+"use client"
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { useDelivery } from "@/contexts/delivery-context"
+import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
+
+interface SeniorProfileProps {
+  seniorId: string
+  onNavigate: (page: string) => void
+  previousPage: string
+}
+
+export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProfileProps) {
+  const { seniors, toggleDeliveryStatus, addDeliveryNote, getDeliveryStatus, isLoading, isSaving } = useDelivery()
+  const [deliveryNote, setDeliveryNote] = useState("")
+  const [showNoteInput, setShowNoteInput] = useState(false)
+
+  const senior = seniors.find((s) => s.id === seniorId)
+  const deliveryStatus = getDeliveryStatus(seniorId)
+
+  const handleCall = (phone: string | null) => {
+    if (phone) {
+    window.open(`tel:${phone}`, "_self")
+    }
+  }
+
+  const handleDirections = (address: string) => {
+    const encodedAddress = encodeURIComponent(address)
+    window.open(`https://maps.google.com/?q=${encodedAddress}`, "_blank")
+  }
+
+  const handleMarkDelivered = async () => {
+    await toggleDeliveryStatus(seniorId)
+  }
+
+  const handleAddNote = async () => {
+    if (deliveryNote.trim()) {
+      await addDeliveryNote(seniorId, deliveryNote.trim())
+      setDeliveryNote("")
+      setShowNoteInput(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading senior profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!senior) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Senior not found</p>
+          <Button onClick={() => onNavigate(previousPage)} className="mt-4">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="sm" onClick={() => onNavigate(previousPage)}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">{senior.name}</h1>
+                <p className="text-sm text-gray-600">Senior Profile</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              {deliveryStatus.isDelivered ? (
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Delivered
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-orange-200 text-orange-700">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Pending
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <span>Basic Information</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Name</Label>
+                <p className="text-gray-900">{senior.name}</p>
+              </div>
+              {senior.age && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Age</Label>
+                  <p className="text-gray-900">{senior.age} years old</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contact Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contact Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start space-x-2">
+              <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <Label className="text-sm font-medium text-gray-700">Address</Label>
+                <p className="text-gray-900">{senior.address}</p>
+              </div>
+            </div>
+            
+            {senior.phone && (
+              <div className="flex items-start space-x-2">
+                <Phone className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <Label className="text-sm font-medium text-gray-700">Phone</Label>
+                  <p className="text-gray-900">{senior.phone}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-2">
+              {senior.phone && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCall(senior.phone)}
+                  disabled={isSaving}
+                  className="flex items-center"
+                >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Call
+                  </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDirections(senior.address)}
+                disabled={isSaving}
+                className="flex items-center"
+              >
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Directions
+                  </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Health & Dietary Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Health & Dietary Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {senior.dietary_restrictions && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Dietary Restrictions</Label>
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 mt-1">
+                  {senior.dietary_restrictions}
+                  </Badge>
+              </div>
+            )}
+
+            {senior.special_instructions && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Special Instructions</Label>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-1">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-amber-800 leading-relaxed">{senior.special_instructions}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {senior.health_conditions && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Health Conditions</Label>
+                <p className="text-gray-900">{senior.health_conditions}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Emergency Contact */}
+        {senior.emergency_contact && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Emergency Contact</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-900">{senior.emergency_contact}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Delivery Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Delivery Status</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                checked={deliveryStatus.isDelivered}
+                onCheckedChange={handleMarkDelivered}
+                disabled={isSaving}
+                className="w-6 h-6"
+              />
+              <Label className="text-lg font-medium">
+                {deliveryStatus.isDelivered ? "Delivered" : "Mark as Delivered"}
+              </Label>
+              {isSaving && <Loader2 className="w-4 h-4 animate-spin text-green-600" />}
+            </div>
+
+            {!deliveryStatus.isDelivered && (
+              <div className="space-y-3">
+            <Button
+              variant="outline"
+                  onClick={() => setShowNoteInput(!showNoteInput)}
+                  disabled={isSaving}
+                  className="w-full"
+                >
+                  Add Delivery Note
+            </Button>
+
+                {showNoteInput && (
+            <div className="space-y-3">
+                    <Textarea
+                      placeholder="Add any notes about this delivery..."
+                      value={deliveryNote}
+                      onChange={(e) => setDeliveryNote(e.target.value)}
+                      disabled={isSaving}
+                      rows={3}
+                    />
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={handleAddNote}
+                        disabled={!deliveryNote.trim() || isSaving}
+                        className="flex-1"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Save Note"
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowNoteInput(false)
+                          setDeliveryNote("")
+                        }}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {deliveryStatus.deliveryHistory.length > 0 && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Delivery History</Label>
+                <div className="mt-2 space-y-2">
+                  {deliveryStatus.deliveryHistory.map((entry, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-medium text-gray-900">{entry.date}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {entry.status}
+                        </Badge>
+                      </div>
+                      {entry.notes && (
+                        <p className="text-sm text-gray-600 mt-1">{entry.notes}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

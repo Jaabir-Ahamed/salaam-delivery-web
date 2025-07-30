@@ -62,18 +62,18 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       const currentMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
       const deliveriesResult = await SupabaseService.getDeliveries(undefined, currentMonth)
       
-      const monthlyDeliveries = deliveriesResult.data?.filter(d => 
+      const monthlyDeliveries = deliveriesResult.data?.filter((d: any) => 
         d.delivery_date.startsWith(currentMonth)
       ) || []
       
-      const completed = monthlyDeliveries.filter(d => d.status === 'delivered').length
-      const pending = monthlyDeliveries.filter(d => d.status === 'pending').length
+      const completed = monthlyDeliveries.filter((d: any) => d.status === 'delivered').length
+      const pending = monthlyDeliveries.filter((d: any) => d.status === 'pending').length
       const successRate = monthlyDeliveries.length > 0 ? 
         Math.round((completed / monthlyDeliveries.length) * 100) : 0
 
       setStats({
         totalSeniors: seniorsResult.data?.length || 0,
-        activeVolunteers: volunteersResult.data?.filter(v => v.active).length || 0,
+        activeVolunteers: volunteersResult.data?.filter((v: any) => v.active).length || 0,
         monthlyDeliveries: monthlyDeliveries.length,
         pendingDeliveries: pending,
         completedDeliveries: completed,

@@ -4,14 +4,6 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase configuration. Please check your environment variables:\n" +
-      "- NEXT_PUBLIC_SUPABASE_URL\n" +
-      "- NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  )
-}
-
 // Helper function to get redirect URL
 const getRedirectUrl = () => {
   if (typeof window !== "undefined") {
@@ -25,15 +17,47 @@ const getRedirectUrl = () => {
     : "http://localhost:3000"
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'salaam-food-pantry-auth',
-  },
-})
+// Create Supabase client only if environment variables are available
+export const supabase = (() => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // During build time or when env vars are missing, return a mock client
+    if (typeof window === "undefined") {
+      // Server-side during build
+      return {
+        auth: {
+          signUp: async () => ({ data: null, error: null }),
+          signInWithPassword: async () => ({ data: null, error: null }),
+          signOut: async () => ({ error: null }),
+          resetPasswordForEmail: async () => ({ error: null }),
+          getUser: async () => ({ data: { user: null }, error: null }),
+        },
+        from: () => ({
+          select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+          insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }),
+          update: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+          delete: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
+        }),
+      } as any
+    }
+    
+    // Client-side when env vars are missing
+    throw new Error(
+      "Missing Supabase configuration. Please check your environment variables:\n" +
+        "- NEXT_PUBLIC_SUPABASE_URL\n" +
+        "- NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      storageKey: 'salaam-food-pantry-auth',
+    },
+  })
+})()
 
 // Database types with accessibility features
 export interface Senior {

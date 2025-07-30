@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useDelivery } from "@/contexts/delivery-context"
+import { SupabaseService } from "@/lib/supabase-service"
 import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
 
 interface SeniorProfileProps {
@@ -16,7 +17,7 @@ interface SeniorProfileProps {
 }
 
 export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProfileProps) {
-  const { seniors, toggleDeliveryStatus, addDeliveryNote, getDeliveryStatus, isLoading, isSaving } = useDelivery()
+  const { seniors, deliveries, getDeliveryStatus, isLoading, refreshData } = useDelivery()
   const [deliveryNote, setDeliveryNote] = useState("")
   const [showNoteInput, setShowNoteInput] = useState(false)
 
@@ -35,14 +36,24 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
   }
 
   const handleMarkDelivered = async () => {
-    await toggleDeliveryStatus(seniorId)
+    // Find the delivery for this senior
+    const delivery = deliveries.find(d => d.senior_id === seniorId)
+    if (delivery) {
+      await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
+      await refreshData()
+    }
   }
 
   const handleAddNote = async () => {
     if (deliveryNote.trim()) {
-      await addDeliveryNote(seniorId, deliveryNote.trim())
-      setDeliveryNote("")
-      setShowNoteInput(false)
+      // Find the delivery for this senior
+      const delivery = deliveries.find(d => d.senior_id === seniorId)
+      if (delivery) {
+        await SupabaseService.updateDelivery(delivery.id, { notes: deliveryNote.trim() })
+        setDeliveryNote("")
+        setShowNoteInput(false)
+        await refreshData()
+      }
     }
   }
 
@@ -156,7 +167,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
                   size="sm"
                   variant="outline"
                   onClick={() => handleCall(senior.phone)}
-                  disabled={isSaving}
+                  disabled={false}
                   className="flex items-center"
                 >
                     <Phone className="w-4 h-4 mr-2" />
@@ -167,7 +178,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
                 size="sm"
                 variant="outline"
                 onClick={() => handleDirections(senior.address)}
-                disabled={isSaving}
+                disabled={false}
                 className="flex items-center"
               >
                     <Navigation className="w-4 h-4 mr-2" />
@@ -235,13 +246,13 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
               <Checkbox
                 checked={deliveryStatus.isDelivered}
                 onCheckedChange={handleMarkDelivered}
-                disabled={isSaving}
+                disabled={false}
                 className="w-6 h-6"
               />
               <Label className="text-lg font-medium">
                 {deliveryStatus.isDelivered ? "Delivered" : "Mark as Delivered"}
               </Label>
-              {isSaving && <Loader2 className="w-4 h-4 animate-spin text-green-600" />}
+
             </div>
 
             {!deliveryStatus.isDelivered && (
@@ -249,7 +260,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
             <Button
               variant="outline"
                   onClick={() => setShowNoteInput(!showNoteInput)}
-                  disabled={isSaving}
+                  disabled={false}
                   className="w-full"
                 >
                   Add Delivery Note
@@ -261,23 +272,16 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
                       placeholder="Add any notes about this delivery..."
                       value={deliveryNote}
                       onChange={(e) => setDeliveryNote(e.target.value)}
-                      disabled={isSaving}
+                      disabled={false}
                       rows={3}
                     />
                     <div className="flex space-x-2">
                       <Button
                         onClick={handleAddNote}
-                        disabled={!deliveryNote.trim() || isSaving}
+                        disabled={!deliveryNote.trim()}
                         className="flex-1"
                       >
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          "Save Note"
-                        )}
+                        Save Note
                       </Button>
                       <Button
                         variant="outline"
@@ -285,7 +289,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
                           setShowNoteInput(false)
                           setDeliveryNote("")
                         }}
-                        disabled={isSaving}
+                        disabled={false}
                       >
                         Cancel
                       </Button>
@@ -295,26 +299,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
               </div>
             )}
 
-            {deliveryStatus.deliveryHistory.length > 0 && (
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Delivery History</Label>
-                <div className="mt-2 space-y-2">
-                  {deliveryStatus.deliveryHistory.map((entry, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-gray-900">{entry.date}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {entry.status}
-                        </Badge>
-                      </div>
-                      {entry.notes && (
-                        <p className="text-sm text-gray-600 mt-1">{entry.notes}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </CardContent>
         </Card>
       </div>

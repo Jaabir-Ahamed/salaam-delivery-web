@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { SupabaseService } from "@/lib/supabase-service"
-import { supabase } from "@/lib/supabase"
+// Lazy import to avoid build-time initialization
+let supabase: any = null
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = require("@/lib/supabase").supabase
+  }
+  return supabase
+}
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 
 interface AuthCallbackProps {
@@ -25,7 +32,7 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
       const {
         data: { session },
         error: sessionError,
-      } = await supabase.auth.getSession()
+      } = await getSupabase().auth.getSession()
 
       if (sessionError) {
         console.error("Session error:", sessionError)
@@ -68,7 +75,7 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
             active: true,
           }
 
-          const { error: volunteerError } = await supabase
+          const { error: volunteerError } = await getSupabase()
             .from("volunteers")
             .insert([volunteerData])
 

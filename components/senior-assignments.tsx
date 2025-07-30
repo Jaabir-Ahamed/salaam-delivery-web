@@ -14,7 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { SupabaseService } from "@/lib/supabase-service"
 import { useAuth } from "@/contexts/auth-context"
 import { ArrowLeft, Users, UserPlus, UserMinus, Edit, Trash2, Search, Filter, Plus, CheckCircle, XCircle, Clock } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+// Lazy import to avoid build-time initialization
+let supabase: any = null
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = require("@/lib/supabase").supabase
+  }
+  return supabase
+}
 import type { Senior, Volunteer, SeniorAssignmentView } from "@/lib/supabase"
 
 interface SeniorAssignmentsProps {
@@ -84,7 +91,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
   }
 
   const setupRealtimeSubscription = () => {
-    const subscription = supabase
+    const subscription = getSupabase()
       .channel('senior_assignments_changes')
       .on(
         'postgres_changes',

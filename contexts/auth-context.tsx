@@ -2,7 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
+// Lazy import to avoid build-time initialization
+let supabase: any = null
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = require("@/lib/supabase").supabase
+  }
+  return supabase
+}
 import { SupabaseService } from "@/lib/supabase-service"
 
 // ============================================================================
@@ -178,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      */
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const { data: { session }, error } = await getSupabase().auth.getSession()
         
         if (error) {
           console.error("Error getting initial session:", error)
@@ -199,7 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
+            const { data: { subscription } } = getSupabase().auth.onAuthStateChange(handleAuthStateChange)
 
     // Get initial session
     getInitialSession()

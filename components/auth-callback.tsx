@@ -58,7 +58,7 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
       // If no volunteer record exists, create one
       if (!volunteer && user.user_metadata) {
         try {
-          await SupabaseService.createVolunteer({
+          const volunteerData = {
             id: user.id,
             email: user.email!,
             name: user.user_metadata.name || user.user_metadata.full_name || "Unknown",
@@ -66,7 +66,15 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
             role: user.user_metadata.role || "volunteer",
             languages: user.user_metadata.languages || ["english"],
             active: true,
-          })
+          }
+
+          const { error: volunteerError } = await supabase
+            .from("volunteers")
+            .insert([volunteerData])
+
+          if (volunteerError) {
+            throw volunteerError
+          }
 
           // Fetch the newly created volunteer record
           volunteer = await SupabaseService.getCurrentUser()

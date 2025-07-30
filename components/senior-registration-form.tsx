@@ -55,6 +55,9 @@ export function SeniorRegistrationForm({ onNavigate, onSuccess, editingSenior }:
         ...formData,
         age: Number.parseInt(formData.age.toString()),
         active: true,
+        building: null, // Add missing required field
+        unit_apt: null, // Add missing required field
+        zip_code: null, // Add missing required field
       }
 
       if (editingSenior) {

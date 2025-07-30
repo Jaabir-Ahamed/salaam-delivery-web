@@ -17,7 +17,7 @@ interface SeniorsListProps {
 }
 
 export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
-  const { seniors, getDeliveryStatus, isLoading, isSaving } = useDelivery()
+  const { seniors, getDeliveryStatus, isLoading } = useDelivery()
   const [searchTerm, setSearchTerm] = useState("")
   const [filter, setFilter] = useState<"all" | "completed" | "pending">("all")
 
@@ -91,7 +91,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
-                disabled={isSaving}
+                disabled={false}
               />
             </div>
           </CardContent>
@@ -105,7 +105,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                 variant={filter === "all" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilter("all")}
-                disabled={isSaving}
+                disabled={false}
                 className="flex-1"
               >
                 All ({seniors.length})
@@ -114,7 +114,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                 variant={filter === "completed" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilter("completed")}
-                disabled={isSaving}
+                disabled={false}
                 className="flex-1"
               >
                 Completed ({seniors.filter((s) => getDeliveryStatus(s.id).isDelivered).length})
@@ -123,7 +123,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                 variant={filter === "pending" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilter("pending")}
-                disabled={isSaving}
+                disabled={false}
                 className="flex-1"
               >
                 Pending ({seniors.filter((s) => !getDeliveryStatus(s.id).isDelivered).length})
@@ -255,7 +255,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                       variant="outline"
                         onClick={(e) => senior.phone && handleCall(senior.phone, e)}
                       className="flex items-center justify-center min-h-[44px] flex-1 sm:flex-none"
-                        disabled={!senior.phone || isSaving}
+                        disabled={!senior.phone}
                     >
                       <Phone className="w-4 h-4 mr-2" />
                       Call
@@ -264,7 +264,7 @@ export function SeniorsList({ onNavigate, onSelectSenior }: SeniorsListProps) {
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white font-semibold min-h-[44px] flex-1 sm:flex-none"
                       onClick={() => onSelectSenior(senior.id)}
-                        disabled={isSaving}
+                        disabled={false}
                     >
                       View Details
                     </Button>

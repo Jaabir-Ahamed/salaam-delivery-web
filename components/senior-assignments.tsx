@@ -324,7 +324,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                           <SelectValue placeholder="Select a volunteer" />
                         </SelectTrigger>
                         <SelectContent>
-                          {volunteers.filter(v => v.active).map((volunteer) => (
+                          {volunteers.filter((v: any) => v.active).map((volunteer: any) => (
                             <SelectItem key={volunteer.id} value={volunteer.id}>
                               {volunteer.name} ({volunteer.email})
                             </SelectItem>
@@ -358,7 +358,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                     <div>
                       <Label>Select Seniors ({bulkSelectedSeniors.length} selected)</Label>
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
-                        {unassignedSeniors.map((senior) => (
+                        {unassignedSeniors.map((senior: any) => (
                           <div key={senior.id} className="flex items-center space-x-2">
                             <input
                               type="checkbox"

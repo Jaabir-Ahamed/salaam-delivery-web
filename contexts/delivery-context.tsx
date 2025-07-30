@@ -111,13 +111,13 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         
         if (assignmentsResult.data) {
           // Extract senior IDs from assignments
-          const seniorIds = assignmentsResult.data.map(assignment => assignment.senior_id)
+          const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
           
           if (seniorIds.length > 0) {
             // Get senior details for assigned seniors
             const seniorsResult = await SupabaseService.getSeniors({ active: true })
             if (seniorsResult.data) {
-              seniorsData = seniorsResult.data.filter(senior => 
+              seniorsData = seniorsResult.data.filter((senior: any) => 
                 seniorIds.includes(senior.id)
               )
             }

@@ -92,7 +92,7 @@ export function AdminReports({ onNavigate }: AdminReportsProps) {
       ["Active Volunteers", stats.activeVolunteers.toString()],
     ]
 
-    const csvContent = csvData.map((row) => row.join(",")).join("\n")
+    const csvContent = csvData.map((row: any) => row.join(",")).join("\n")
     const blob = new Blob([csvContent], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -259,7 +259,7 @@ export function AdminReports({ onNavigate }: AdminReportsProps) {
           </CardHeader>
               <CardContent className="pt-0 px-6 pb-6">
                 <div className="h-48 sm:h-56 flex items-end justify-between space-x-4 sm:space-x-6 px-4 sm:px-6">
-              {stats?.monthlyTrends?.map((data, index) => {
+              {stats?.monthlyTrends?.map((data: any, index: any) => {
                 const height = Math.max((data.completionRate / 100) * 160, 20)
                 return (
                       <div key={data.month} className="flex flex-col items-center flex-1 min-w-0">
@@ -338,7 +338,7 @@ export function AdminReports({ onNavigate }: AdminReportsProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {volunteerReport.map((v) => (
+                    {volunteerReport.map((v: any) => (
                       <TableRow key={v.id}>
                         <TableCell>{v.name}</TableCell>
                         <TableCell>{v.email}</TableCell>

@@ -235,7 +235,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.length > 0 ? (
-                    recentActivity.map((delivery) => (
+                    recentActivity.map((delivery: any) => (
                       <div key={delivery.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
                           {getStatusIcon(delivery.status)}

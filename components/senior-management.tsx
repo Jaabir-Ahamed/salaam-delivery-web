@@ -73,7 +73,7 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
   const loadSeniors = async () => {
     setIsLoading(true)
     try {
-      const result = await SupabaseService.getSeniors(false)
+      const result = await SupabaseService.getSeniors({ active: false })
       if (result.error) {
         setError("Failed to load seniors: " + result.error.message)
       } else {
@@ -141,7 +141,10 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
         ...formData,
         age: parseInt(formData.age),
         family_adults: parseInt(formData.family_adults),
-        family_children: parseInt(formData.family_children)
+        family_children: parseInt(formData.family_children),
+        building: null, // Add missing required field
+        unit_apt: null, // Add missing required field
+        zip_code: null // Add missing required field
       }
 
       if (editingSenior) {
@@ -178,7 +181,7 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
     setEditingSenior(senior)
     setFormData({
       name: senior.name,
-      age: senior.age.toString(),
+      age: senior.age?.toString() || "",
       household_type: senior.household_type,
       family_adults: senior.family_adults.toString(),
       family_children: senior.family_children.toString(),

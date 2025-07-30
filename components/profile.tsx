@@ -34,9 +34,7 @@ export function Profile({ onNavigate }: ProfileProps) {
     confirmPassword: "",
   })
 
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
-    user?.profile_picture ? SupabaseService.getProfilePictureUrl(user.profile_picture) : null,
-  )
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null)
 
   const showMessage = (text: string, type: "success" | "error") => {
     setMessage(text)
@@ -57,9 +55,8 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsLoading(true)
     try {
-      const url = await SupabaseService.uploadProfilePicture(file)
-      setProfilePictureUrl(url)
-      showMessage("Profile picture updated successfully!", "success")
+      // Profile picture upload not implemented yet
+      showMessage("Profile picture upload not implemented yet", "error")
     } catch (error: any) {
       showMessage(error.message || "Error uploading profile picture", "error")
     } finally {
@@ -75,7 +72,7 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsUpdating(true)
     try {
-      await SupabaseService.updateProfile({
+      await SupabaseService.updateCurrentUser({
         name: formData.name,
         phone: formData.phone,
       })
@@ -101,8 +98,8 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsLoading(true)
     try {
-      await SupabaseService.updateEmail(formData.newEmail)
-      showMessage("Verification email sent! Please check your inbox.", "success")
+      // Email update not implemented yet
+      showMessage("Email update not implemented yet", "error")
       setFormData((prev) => ({ ...prev, newEmail: "" }))
     } catch (error: any) {
       showMessage(error.message || "Error sending verification email", "error")
@@ -134,7 +131,8 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsLoading(true)
     try {
-      await SupabaseService.updatePassword(formData.newPassword)
+      // Password update not implemented yet
+      showMessage("Password update not implemented yet", "error")
       showMessage("Password changed successfully!", "success")
       setFormData((prev) => ({
         ...prev,

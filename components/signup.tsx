@@ -110,8 +110,7 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
 
       setSuccess(true)
       setSuccessMessage(
-        result.message ||
-          "Account created successfully! Please check your email to confirm your account. The confirmation link will redirect you back to this app.",
+        "Account created successfully! Please check your email to confirm your account. The confirmation link will redirect you back to this app."
       )
 
       // Auto-redirect to login after 5 seconds

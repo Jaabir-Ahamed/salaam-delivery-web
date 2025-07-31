@@ -628,8 +628,8 @@ export class SupabaseService {
       }
 
       // Filter out seniors who have active assignments
-      const assignedSeniorIds = new Set(assignments?.map(a => a.senior_id) || [])
-      const unassignedSeniors = (allSeniors || []).filter(senior => !assignedSeniorIds.has(senior.id))
+      const assignedSeniorIds = new Set(assignments?.map((a: any) => a.senior_id) || [])
+      const unassignedSeniors = (allSeniors || []).filter((senior: any) => !assignedSeniorIds.has(senior.id))
 
       return { data: unassignedSeniors, error: null }
     } catch (error: any) {
@@ -852,7 +852,7 @@ export class SupabaseService {
 
       // Calculate current month stats
       const totalDeliveries = currentMonthDeliveries?.length || 0
-      const completedDeliveries = currentMonthDeliveries?.filter(d => 
+      const completedDeliveries = currentMonthDeliveries?.filter((d: any) => 
         d.status === "delivered" || d.status === "family_confirmed"
       ).length || 0
       const seniorsServed = currentMonthSeniors?.length || 0
@@ -878,7 +878,7 @@ export class SupabaseService {
           console.warn(`Error fetching trend data for ${trendMonthStr}:`, trendError)
         }
 
-        const completed = trendDeliveries?.filter(d => 
+        const completed = trendDeliveries?.filter((d: any) => 
           d.status === "delivered" || d.status === "family_confirmed"
         ).length || 0
 
@@ -930,7 +930,7 @@ export class SupabaseService {
         totalSeniors: data?.length || 0
       }
 
-      data?.forEach(senior => {
+      data?.forEach((senior: any) => {
         if (senior.dietary_restrictions) stats.dietaryRestrictions++
         if (senior.accessibility_needs) stats.accessibilityNeeds++
       })

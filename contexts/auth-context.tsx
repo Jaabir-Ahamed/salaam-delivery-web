@@ -69,6 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Navigation history for back button functionality
   const [navigationHistory, setNavigationHistory] = useState<string[]>([])
+  
+  // Prevent rapid profile loading calls
+  const [lastProfileLoad, setLastProfileLoad] = useState<number>(0)
+  
+  // Session timeout - auto logout after 8 hours of inactivity
+  const SESSION_TIMEOUT = 8 * 60 * 60 * 1000 // 8 hours in milliseconds
 
   /**
    * Add a page to navigation history
@@ -119,8 +125,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const loadUserProfile = async (user: User) => {
     try {
+      // Prevent rapid calls - only load profile once per 2 seconds
+      const now = Date.now()
+      if (now - lastProfileLoad < 2000) {
+        console.log("Profile load throttled, skipping")
+        return
+      }
+      setLastProfileLoad(now)
+      
+      console.log("Loading profile for user:", user.id)
+      
       const profile = await SupabaseService.getCurrentUser()
       if (profile) {
+        console.log("Profile loaded successfully:", profile.name)
         // Merge Supabase user data with profile data
         setUser({
           ...user,
@@ -161,6 +178,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleAuthStateChange = async (event: string, session: any) => {
       if (!mounted) return
 
+      console.log("Auth state change:", event, session?.user?.id)
+
       if (event === "SIGNED_IN" && session?.user) {
         // User has signed in - load their profile
         await loadUserProfile(session.user)
@@ -171,10 +190,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setNavigationHistory([])
         setIsLoading(false)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Session refreshed - update user if needed
+        // Session refreshed - only update if user actually changed
         if (!user || user.id !== session.user.id) {
+          console.log("User changed, updating profile")
           await loadUserProfile(session.user)
+        } else {
+          console.log("User unchanged, skipping profile update")
         }
+        setIsLoading(false)
+      } else {
+        // Handle other events
         setIsLoading(false)
       }
     }
@@ -217,6 +242,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription?.unsubscribe()
     }
   }, []) // Only run once on mount
+
+  // Session timeout effect
+  useEffect(() => {
+    if (!user) return
+
+    const checkSessionTimeout = () => {
+      const lastActivity = localStorage.getItem('lastActivity')
+      if (lastActivity) {
+        const timeSinceLastActivity = Date.now() - parseInt(lastActivity)
+        if (timeSinceLastActivity > SESSION_TIMEOUT) {
+          console.log("Session expired, logging out")
+          logout()
+        }
+      }
+    }
+
+    // Update last activity on user interaction
+    const updateLastActivity = () => {
+      localStorage.setItem('lastActivity', Date.now().toString())
+    }
+
+    // Check session timeout every minute
+    const interval = setInterval(checkSessionTimeout, 60000)
+    
+    // Update activity on user interactions
+    window.addEventListener('mousedown', updateLastActivity)
+    window.addEventListener('keydown', updateLastActivity)
+    window.addEventListener('touchstart', updateLastActivity)
+
+    // Set initial activity
+    updateLastActivity()
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('mousedown', updateLastActivity)
+      window.removeEventListener('keydown', updateLastActivity)
+      window.removeEventListener('touchstart', updateLastActivity)
+    }
+  }, [user])
 
   // ============================================================================
   // CONTEXT VALUE

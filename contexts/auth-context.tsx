@@ -69,12 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Navigation history for back button functionality
   const [navigationHistory, setNavigationHistory] = useState<string[]>([])
-  
-  // Prevent rapid profile loading calls
-  const [lastProfileLoad, setLastProfileLoad] = useState<number>(0)
-  
-  // Session timeout - auto logout after 8 hours of inactivity
-  const SESSION_TIMEOUT = 8 * 60 * 60 * 1000 // 8 hours in milliseconds
 
   /**
    * Add a page to navigation history
@@ -97,6 +91,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const previousPage = newHistory.pop() || null
     setNavigationHistory(newHistory)
     return previousPage
+  }
+
+  /**
+   * Handle page visibility change (tab/window close)
+   * Logs out user when tab becomes hidden
+   */
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden' && user) {
+      // Small delay to avoid immediate logout on page refresh
+      setTimeout(() => {
+        if (document.visibilityState === 'hidden') {
+          logout()
+        }
+      }, 1000)
+    }
+  }
+
+  /**
+   * Handle beforeunload event (tab/window close)
+   * Logs out user when tab is being closed
+   */
+  const handleBeforeUnload = () => {
+    if (user) {
+      logout()
+    }
   }
 
   /**
@@ -125,19 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    */
   const loadUserProfile = async (user: User) => {
     try {
-      // Prevent rapid calls - only load profile once per 2 seconds
-      const now = Date.now()
-      if (now - lastProfileLoad < 2000) {
-        console.log("Profile load throttled, skipping")
-        return
-      }
-      setLastProfileLoad(now)
-      
-      console.log("Loading profile for user:", user.id)
-      
       const profile = await SupabaseService.getCurrentUser()
       if (profile) {
-        console.log("Profile loaded successfully:", profile.name)
         // Merge Supabase user data with profile data
         setUser({
           ...user,
@@ -178,8 +186,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleAuthStateChange = async (event: string, session: any) => {
       if (!mounted) return
 
-      console.log("Auth state change:", event, session?.user?.id)
-
       if (event === "SIGNED_IN" && session?.user) {
         // User has signed in - load their profile
         await loadUserProfile(session.user)
@@ -190,16 +196,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setNavigationHistory([])
         setIsLoading(false)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Session refreshed - only update if user actually changed
+        // Session refreshed - update user if needed
         if (!user || user.id !== session.user.id) {
-          console.log("User changed, updating profile")
           await loadUserProfile(session.user)
-        } else {
-          console.log("User unchanged, skipping profile update")
         }
-        setIsLoading(false)
-      } else {
-        // Handle other events
         setIsLoading(false)
       }
     }
@@ -241,46 +241,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription?.unsubscribe()
     }
-  }, []) // Only run once on mount
+  }, [user?.id]) // Re-run when user ID changes
 
-  // Session timeout effect
+  // ============================================================================
+  // AUTO-LOGOUT ON TAB/WINDOW CLOSE
+  // ============================================================================
+
+  /**
+   * Set up event listeners for auto-logout when tab/window is closed
+   */
   useEffect(() => {
-    if (!user) return
+    if (typeof window === "undefined") return
 
-    const checkSessionTimeout = () => {
-      const lastActivity = localStorage.getItem('lastActivity')
-      if (lastActivity) {
-        const timeSinceLastActivity = Date.now() - parseInt(lastActivity)
-        if (timeSinceLastActivity > SESSION_TIMEOUT) {
-          console.log("Session expired, logging out")
-          logout()
-        }
-      }
-    }
+    // Add event listeners for tab/window close
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleBeforeUnload)
 
-    // Update last activity on user interaction
-    const updateLastActivity = () => {
-      localStorage.setItem('lastActivity', Date.now().toString())
-    }
-
-    // Check session timeout every minute
-    const interval = setInterval(checkSessionTimeout, 60000)
-    
-    // Update activity on user interactions
-    window.addEventListener('mousedown', updateLastActivity)
-    window.addEventListener('keydown', updateLastActivity)
-    window.addEventListener('touchstart', updateLastActivity)
-
-    // Set initial activity
-    updateLastActivity()
-
+    // Cleanup function
     return () => {
-      clearInterval(interval)
-      window.removeEventListener('mousedown', updateLastActivity)
-      window.removeEventListener('keydown', updateLastActivity)
-      window.removeEventListener('touchstart', updateLastActivity)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [user])
+  }, [user]) // Re-run when user changes
 
   // ============================================================================
   // CONTEXT VALUE

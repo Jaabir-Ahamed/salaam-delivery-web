@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { SupabaseService } from "@/lib/supabase-service"
+import { NavigationBar } from "@/components/navigation-bar"
 import {
   Truck,
   Users,
@@ -37,7 +38,7 @@ interface DashboardStats {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { user, logout } = useAuth()
+  const { user, logout, pushToHistory } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     todayCompleted: 0,
     todayTotal: 0,
@@ -112,46 +113,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-orange-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 flex items-center justify-center">
-                <img 
-                  src="https://images.squarespace-cdn.com/content/640a69d4ab6bd06b8101c1c7/69b970bb-3f0e-4ecf-b458-af07e5485667/Salaam+Food+Pantry+Favicon.png?content-type=image%2Fpng" 
-                  alt="Salaam Food Pantry Logo" 
-                  className="w-10 h-10 object-contain"
-                />
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-green-800">Salaam Food Pantry</h1>
-                <p className="text-xs sm:text-sm text-green-600">Senior Breakfast Delivery</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onNavigate("profile")}
-                className="flex items-center space-x-2 p-2 sm:p-2"
-              >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={profilePictureUrl || undefined} />
-                  <AvatarFallback className="bg-green-100 text-green-700 text-xs font-semibold">
-                    {getInitials(user?.name || "")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden md:inline text-sm">{user?.name}</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={logout} className="p-2 sm:p-2">
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline ml-2">Sign Out</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Navigation Bar */}
+      <NavigationBar 
+        title="Dashboard" 
+        showLogout={true}
+        className="bg-white"
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Welcome Section */}
@@ -218,7 +185,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-10">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onNavigate("deliveries")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
+            pushToHistory("deliveries")
+            onNavigate("deliveries")
+          }}>
             <CardContent className="p-6 sm:p-8">
               <div className="flex items-center space-x-4 sm:space-x-5">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -232,7 +202,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onNavigate("seniors")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
+            pushToHistory("seniors")
+            onNavigate("seniors")
+          }}>
             <CardContent className="p-6 sm:p-8">
               <div className="flex items-center space-x-4 sm:space-x-5">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -246,7 +219,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onNavigate("map")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
+            pushToHistory("map")
+            onNavigate("map")
+          }}>
             <CardContent className="p-6 sm:p-8">
               <div className="flex items-center space-x-4 sm:space-x-5">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -260,7 +236,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onNavigate("profile")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => {
+            pushToHistory("profile")
+            onNavigate("profile")
+          }}>
             <CardContent className="p-6 sm:p-8">
               <div className="flex items-center space-x-4 sm:space-x-5">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -279,7 +258,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <>
               <Card
                 className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => onNavigate("manage-seniors")}
+                onClick={() => {
+                  pushToHistory("manage-seniors")
+                  onNavigate("manage-seniors")
+                }}
               >
                 <CardContent className="p-6 sm:p-8">
                   <div className="flex items-center space-x-4 sm:space-x-5">

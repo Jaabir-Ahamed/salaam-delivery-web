@@ -68,13 +68,20 @@ export class SupabaseService {
    */
   static async signIn(email: string, password: string) {
     try {
+      console.log("SupabaseService.signIn called with email:", email)
+      console.log("Supabase client available:", !!supabase)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error("Supabase auth error:", error)
+        throw error
+      }
 
+      console.log("Sign in successful for user:", data?.user?.id)
       return { data, error: null }
     } catch (error: any) {
       console.error("Signin error:", error)

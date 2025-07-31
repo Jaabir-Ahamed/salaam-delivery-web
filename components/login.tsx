@@ -30,22 +30,27 @@ export function Login({ onNavigateToSignup, onForgotPassword, onLoginSuccess }: 
     setIsLoading(true)
 
     try {
+      console.log("Attempting to sign in with:", email)
       const result = await SupabaseService.signIn(email, password)
 
       if (result.error) {
+        console.error("Sign in error:", result.error)
         throw result.error
       }
 
       if (result.data?.user) {
+        console.log("User authenticated, getting profile...")
         // Get the user's profile
         const volunteer = await SupabaseService.getCurrentUser()
         if (volunteer) {
+          console.log("Profile found:", volunteer)
           onLoginSuccess(volunteer)
         } else {
           throw new Error("User profile not found. Please contact support.")
         }
       }
     } catch (error: any) {
+      console.error("Login error details:", error)
       setError(error.message || "An error occurred during login")
     } finally {
       setIsLoading(false)

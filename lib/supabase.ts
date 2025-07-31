@@ -40,12 +40,61 @@ export const supabase = (() => {
       } as any
     }
     
-    // Client-side when env vars are missing
-    throw new Error(
-      "Missing Supabase configuration. Please check your environment variables:\n" +
-        "- NEXT_PUBLIC_SUPABASE_URL\n" +
-        "- NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    )
+    // Client-side when env vars are missing - show a helpful error
+    console.error("Missing Supabase configuration. Please check your environment variables:")
+    console.error("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "Set" : "Missing")
+    console.error("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "Set" : "Missing")
+    
+    // Return a mock client that shows an error message instead of throwing
+    return {
+      auth: {
+        signUp: async () => ({ 
+          data: null, 
+          error: { message: "Supabase not configured. Please set environment variables." } 
+        }),
+        signInWithPassword: async () => ({ 
+          data: null, 
+          error: { message: "Supabase not configured. Please set environment variables." } 
+        }),
+        signOut: async () => ({ error: null }),
+        resetPasswordForEmail: async () => ({ error: null }),
+        getUser: async () => ({ data: { user: null }, error: null }),
+      },
+      from: () => ({
+        select: () => ({ 
+          eq: () => ({ 
+            single: async () => ({ 
+              data: null, 
+              error: { message: "Supabase not configured. Please set environment variables." } 
+            }) 
+          }) 
+        }),
+        insert: () => ({ 
+          select: () => ({ 
+            single: async () => ({ 
+              data: null, 
+              error: { message: "Supabase not configured. Please set environment variables." } 
+            }) 
+          }) 
+        }),
+        update: () => ({ 
+          eq: () => ({ 
+            single: async () => ({ 
+              data: null, 
+              error: { message: "Supabase not configured. Please set environment variables." } 
+            }) 
+          }) 
+        }),
+        delete: () => ({ 
+          eq: () => ({ 
+            single: async () => ({ 
+              data: null, 
+              error: { message: "Supabase not configured. Please set environment variables." } 
+            }) 
+          }) 
+        }),
+      }),
+    } as any
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {

@@ -18,6 +18,7 @@ import { SeniorRegistrationForm } from "@/components/senior-registration-form"
 import { CSVImport } from "@/components/csv-import"
 import { VolunteerManagement } from "@/components/volunteer-management"
 import { SeniorAssignments } from "@/components/senior-assignments"
+import { EnvSetupGuide } from "@/components/env-setup-guide"
 import type { Senior } from "@/lib/supabase"
 import { DeliveryProvider } from "@/contexts/delivery-context"
 
@@ -36,6 +37,7 @@ type AppPage =
   | "profile"
   | "manage-volunteers"
   | "senior-assignments"
+  | "env-setup"
 
 /**
  * Main application content component
@@ -218,6 +220,8 @@ function AppContent() {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <SeniorAssignments onNavigate={handleNavigate} />
+    case "env-setup":
+      return <EnvSetupGuide onNavigate={handleNavigate} />
     default:
       // Default to dashboard for authenticated users
       return <Dashboard onNavigate={handleNavigate} />

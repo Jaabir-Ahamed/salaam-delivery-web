@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription?.unsubscribe()
     }
-  }, [user?.id]) // Re-run when user ID changes
+  }, []) // Only run once on mount
 
   // ============================================================================
   // CONTEXT VALUE

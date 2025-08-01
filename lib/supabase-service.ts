@@ -68,20 +68,13 @@ export class SupabaseService {
    */
   static async signIn(email: string, password: string) {
     try {
-      console.log("SupabaseService.signIn called with email:", email)
-      console.log("Supabase client available:", !!supabase)
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        console.error("Supabase auth error:", error)
-        throw error
-      }
+      if (error) throw error
 
-      console.log("Sign in successful for user:", data?.user?.id)
       return { data, error: null }
     } catch (error: any) {
       console.error("Signin error:", error)
@@ -133,12 +126,16 @@ export class SupabaseService {
    */
   static async getCurrentUser() {
     try {
+      console.log("SupabaseService.getCurrentUser called")
+      
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (authError || !user) {
         console.warn("No authenticated user found")
         return null
       }
+
+      console.log("User authenticated, fetching profile for:", user.id)
 
       // Get volunteer profile
       const { data: volunteer, error: volunteerError } = await supabase
@@ -149,11 +146,7 @@ export class SupabaseService {
 
       if (volunteerError) {
         console.warn("Error fetching volunteer profile:", volunteerError)
-        return null
-      }
-
-      // Get admin profile if volunteer not found
-      if (!volunteer) {
+        // Try admin profile instead
         const { data: admin, error: adminError } = await supabase
           .from("admins")
           .select("*")
@@ -165,9 +158,11 @@ export class SupabaseService {
           return null
         }
 
+        console.log("Admin profile found")
         return admin
       }
 
+      console.log("Volunteer profile found")
       return volunteer
     } catch (error) {
       console.error("Error getting current user:", error)

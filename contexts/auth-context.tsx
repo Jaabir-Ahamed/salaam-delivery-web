@@ -186,9 +186,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleAuthStateChange = async (event: string, session: any) => {
       if (!mounted) return
 
+      console.log("Auth state change:", event, session?.user?.id)
+
       if (event === "SIGNED_IN" && session?.user) {
         // User has signed in - load their profile
-        await loadUserProfile(session.user)
+        try {
+          await loadUserProfile(session.user)
+        } catch (error) {
+          console.error("Error loading user profile:", error)
+        }
         setIsLoading(false)
       } else if (event === "SIGNED_OUT") {
         // User has signed out - clear state
@@ -198,7 +204,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         // Session refreshed - update user if needed
         if (!user || user.id !== session.user.id) {
-          await loadUserProfile(session.user)
+          try {
+            await loadUserProfile(session.user)
+          } catch (error) {
+            console.error("Error loading user profile on token refresh:", error)
+          }
         }
         setIsLoading(false)
       }

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuth } from "./auth-context"
 import { SupabaseService } from "@/lib/supabase-service"
 import type { Senior, Delivery } from "@/lib/supabase"
@@ -78,7 +78,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
    * Load seniors and delivery data for the current user
    * Fetches data based on user role and permissions
    */
-  const loadSeniorsAndDeliveries = async () => {
+  const loadSeniorsAndDeliveries = useCallback(async () => {
     let timeoutId: NodeJS.Timeout | null = null
     
     try {
@@ -200,7 +200,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       if (timeoutId) clearTimeout(timeoutId)
       setIsLoading(false)
     }
-  }
+  }, [user?.id]) // Add dependency array to prevent infinite re-renders
 
   /**
    * Refresh all delivery and senior data
@@ -227,7 +227,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false)
       setSeniors([])
     }
-  }, [user, authLoading])
+  }, [user, authLoading, loadSeniorsAndDeliveries])
 
   // ============================================================================
   // CONTEXT VALUE

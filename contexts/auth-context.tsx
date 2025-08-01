@@ -210,7 +210,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      */
     const getInitialSession = async () => {
       try {
+        // Add timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+          console.warn("Auth loading timeout - forcing completion")
+          setIsLoading(false)
+        }, 5000) // 5 second timeout for auth
+
         const { data: { session }, error } = await getSupabase().auth.getSession()
+        
+        clearTimeout(timeoutId)
         
         if (error) {
           console.error("Error getting initial session:", error)

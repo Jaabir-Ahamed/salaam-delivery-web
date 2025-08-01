@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useDelivery } from "@/contexts/delivery-context"
+import { useAuth } from "@/contexts/auth-context"
 import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
 
@@ -21,6 +22,7 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     deliveryStatus,
     refreshData
   } = useDelivery()
+  const { user } = useAuth()
 
   // Calculate counts from the data
   const completedCount = Object.values(deliveryStatus).filter(status => status.isDelivered).length
@@ -42,8 +44,19 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     // Mark all deliveries as completed
     for (const senior of seniors) {
       const delivery = deliveries.find(d => d.senior_id === senior.id)
-      if (delivery && delivery.status !== "delivered") {
-        await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
+      if (delivery) {
+        if (delivery.status !== "delivered") {
+          await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
+        }
+      } else {
+        // Create new delivery record if it doesn't exist
+        const today = new Date().toISOString().split('T')[0]
+        await SupabaseService.createDelivery({
+          volunteer_id: user?.id || "",
+          senior_id: senior.id,
+          delivery_date: today,
+          status: "delivered"
+        })
       }
     }
     await refreshData()
@@ -118,13 +131,22 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                         checked={seniorDeliveryStatus.isDelivered}
                         onCheckedChange={async (checked) => {
                           const delivery = deliveries.find(d => d.senior_id === senior.id)
+                          const newStatus = checked ? "delivered" : "pending"
+                          
                           if (delivery) {
-                            const newStatus = checked ? "delivered" : "pending"
+                            // Update existing delivery record
                             await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
-                            await refreshData()
                           } else {
-                            console.warn("No delivery record found for senior:", senior.id)
+                            // Create new delivery record
+                            const today = new Date().toISOString().split('T')[0]
+                            await SupabaseService.createDelivery({
+                              volunteer_id: user?.id || "",
+                              senior_id: senior.id,
+                              delivery_date: today,
+                              status: newStatus
+                            })
                           }
+                          await refreshData()
                         }}
                         className="w-6 h-6"
                       />

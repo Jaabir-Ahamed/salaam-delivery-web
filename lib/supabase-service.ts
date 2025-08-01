@@ -539,6 +539,33 @@ export class SupabaseService {
   }
 
   /**
+   * Create a new delivery record
+   * @param deliveryData - Delivery data to create
+   * @returns Promise with created delivery data or error
+   */
+  static async createDelivery(deliveryData: {
+    volunteer_id: string
+    senior_id: string
+    delivery_date: string
+    status?: string
+    notes?: string
+  }) {
+    try {
+      const { data, error } = await supabase
+        .from("deliveries")
+        .insert(deliveryData)
+        .select()
+        .single()
+
+      if (error) throw error
+      return { data, error: null }
+    } catch (error: any) {
+      console.error("Error creating delivery:", error)
+      return { data: null, error }
+    }
+  }
+
+  /**
    * Update delivery status and notes
    * @param deliveryId - Delivery's unique identifier
    * @param updates - Object containing status and notes to update

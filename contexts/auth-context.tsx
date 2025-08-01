@@ -143,10 +143,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * @returns Promise that resolves when profile is loaded
    */
   const loadUserProfile = async (user: User) => {
+    // Set basic user data immediately
+    const basicUserData = {
+      ...user,
+      name: user.user_metadata?.name || user.email,
+      role: "volunteer", // Default role
+      active: true
+    } as UserProfile
+    
+    setUser(basicUserData)
+    
+    // Try to load profile data in background with timeout
     try {
-      const profile = await SupabaseService.getCurrentUser()
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 5000)
+      })
+      
+      const profilePromise = SupabaseService.getCurrentUser()
+      const profile = await Promise.race([profilePromise, timeoutPromise])
+      
       if (profile) {
-        // Merge Supabase user data with profile data
+        // Update with full profile data
         setUser({
           ...user,
           name: profile.name,
@@ -155,25 +172,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           languages: profile.languages,
           active: profile.active,
         })
-      } else {
-        // User exists in auth but no profile found - use basic user data
-        console.warn("User authenticated but no profile found, using basic user data")
-        setUser({
-          ...user,
-          name: user.user_metadata?.name || user.email,
-          role: "volunteer", // Default role
-          active: true
-        } as UserProfile)
+        console.log("Profile loaded successfully")
       }
     } catch (error) {
-      console.error("Error loading user profile:", error)
-      // Fallback to basic user data
-      setUser({
-        ...user,
-        name: user.user_metadata?.name || user.email,
-        role: "volunteer", // Default role
-        active: true
-      } as UserProfile)
+      console.warn("Profile fetch failed or timed out, using basic user data:", error)
+      // Keep the basic user data that was already set
     }
   }
 
@@ -199,12 +202,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state change:", event, session?.user?.id)
 
       if (event === "SIGNED_IN" && session?.user) {
-        // User has signed in - load their profile
-        try {
-          await loadUserProfile(session.user)
-        } catch (error) {
-          console.error("Error loading user profile:", error)
-        }
+        // User has signed in - load their profile (non-blocking)
+        loadUserProfile(session.user)
         setIsLoading(false)
       } else if (event === "SIGNED_OUT") {
         // User has signed out - clear state
@@ -212,13 +211,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setNavigationHistory([])
         setIsLoading(false)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Session refreshed - update user if needed
+        // Session refreshed - update user if needed (non-blocking)
         if (!user || user.id !== session.user.id) {
-          try {
-            await loadUserProfile(session.user)
-          } catch (error) {
-            console.error("Error loading user profile on token refresh:", error)
-          }
+          loadUserProfile(session.user)
         }
         setIsLoading(false)
       }

@@ -115,13 +115,15 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 pt-1">
                       <Checkbox
-                          checked={seniorDeliveryStatus.isDelivered}
-                        onCheckedChange={async () => {
+                        checked={seniorDeliveryStatus.isDelivered}
+                        onCheckedChange={async (checked) => {
                           const delivery = deliveries.find(d => d.senior_id === senior.id)
                           if (delivery) {
-                            const newStatus = seniorDeliveryStatus.isDelivered ? "pending" : "delivered"
+                            const newStatus = checked ? "delivered" : "pending"
                             await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
                             await refreshData()
+                          } else {
+                            console.warn("No delivery record found for senior:", senior.id)
                           }
                         }}
                         className="w-6 h-6"

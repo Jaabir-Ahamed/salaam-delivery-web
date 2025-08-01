@@ -79,13 +79,22 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
    * Fetches data based on user role and permissions
    */
   const loadSeniorsAndDeliveries = async () => {
+    let timeoutId: NodeJS.Timeout | null = null
+    
     try {
       setIsLoading(true)
+      
+      // Add timeout to prevent infinite loading
+      timeoutId = setTimeout(() => {
+        console.warn("Loading timeout - forcing completion")
+        setIsLoading(false)
+      }, 10000) // 10 second timeout
       
       // Get current user from auth context instead of service
       if (!user?.id) {
         console.error("No current user found")
         setSeniors([])
+        if (timeoutId) clearTimeout(timeoutId)
         setIsLoading(false)
         return
       }
@@ -142,6 +151,9 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         const result = await SupabaseService.getTodaysDeliveries(user.id)
         deliveriesData = result.data
         deliveriesError = result.error
+      } else if (user.id && isAdmin) {
+        // For admins, we might want to show all deliveries or just set empty array
+        deliveriesData = []
       }
 
       if (deliveriesError) {
@@ -164,13 +176,28 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
           }
         })
       }
+      
+      // Initialize delivery status for seniors without delivery records
+      seniorsData?.forEach((senior: any) => {
+        if (!newDeliveryStatus[senior.id]) {
+          newDeliveryStatus[senior.id] = {
+            isDelivered: false,
+            status: "pending",
+            notes: ""
+          }
+        }
+      })
+      
+      console.log("Delivery status updated:", newDeliveryStatus)
       setDeliveryStatus(newDeliveryStatus)
 
     } catch (error) {
       console.error("Error in loadSeniorsAndDeliveries:", error)
       setSeniors([])
       setDeliveries([])
+      setDeliveryStatus({})
     } finally {
+      if (timeoutId) clearTimeout(timeoutId)
       setIsLoading(false)
     }
   }

@@ -45,22 +45,10 @@ export function Login({ onNavigateToSignup, onForgotPassword, onLoginSuccess }: 
       }
 
       if (result.data?.user) {
-        console.log("Sign in successful, getting user profile...")
-        
-        // Add timeout for profile fetch
-        const profileTimeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Profile fetch timeout")), 5000)
-        })
-        
-        const profilePromise = SupabaseService.getCurrentUser()
-        const volunteer = await Promise.race([profilePromise, profileTimeoutPromise])
-        
-        if (volunteer) {
-          console.log("User profile loaded successfully")
-          onLoginSuccess(volunteer)
-        } else {
-          throw new Error("User profile not found. Please contact support.")
-        }
+        console.log("Sign in successful, user authenticated")
+        // The auth state change will handle profile loading
+        // Just return success to clear the loading state
+        onLoginSuccess(result.data.user)
       }
     } catch (error: any) {
       console.error("Login error:", error)

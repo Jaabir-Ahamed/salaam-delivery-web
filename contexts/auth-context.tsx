@@ -156,14 +156,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           active: profile.active,
         })
       } else {
-        // User exists in auth but no profile found
-        console.warn("User authenticated but no profile found")
-        setUser(user as UserProfile)
+        // User exists in auth but no profile found - use basic user data
+        console.warn("User authenticated but no profile found, using basic user data")
+        setUser({
+          ...user,
+          name: user.user_metadata?.name || user.email,
+          role: "volunteer", // Default role
+          active: true
+        } as UserProfile)
       }
     } catch (error) {
       console.error("Error loading user profile:", error)
       // Fallback to basic user data
-      setUser(user as UserProfile)
+      setUser({
+        ...user,
+        name: user.user_metadata?.name || user.email,
+        role: "volunteer", // Default role
+        active: true
+      } as UserProfile)
     }
   }
 

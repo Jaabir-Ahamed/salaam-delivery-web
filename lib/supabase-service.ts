@@ -137,33 +137,47 @@ export class SupabaseService {
 
       console.log("User authenticated, fetching profile for:", user.id)
 
-      // Get volunteer profile
-      const { data: volunteer, error: volunteerError } = await supabase
-        .from("volunteers")
-        .select("*")
-        .eq("id", user.id)
-        .single()
+      // Try to get volunteer profile first
+      try {
+        const { data: volunteer, error: volunteerError } = await supabase
+          .from("volunteers")
+          .select("*")
+          .eq("id", user.id)
+          .single()
 
-      if (volunteerError) {
+        if (!volunteerError && volunteer) {
+          console.log("Volunteer profile found")
+          return volunteer
+        }
+      } catch (volunteerError) {
         console.warn("Error fetching volunteer profile:", volunteerError)
-        // Try admin profile instead
+      }
+
+      // Try to get admin profile if volunteer not found
+      try {
         const { data: admin, error: adminError } = await supabase
           .from("admins")
           .select("*")
           .eq("id", user.id)
           .single()
 
-        if (adminError) {
-          console.warn("Error fetching admin profile:", adminError)
-          return null
+        if (!adminError && admin) {
+          console.log("Admin profile found")
+          return admin
         }
-
-        console.log("Admin profile found")
-        return admin
+      } catch (adminError) {
+        console.warn("Error fetching admin profile:", adminError)
       }
 
-      console.log("Volunteer profile found")
-      return volunteer
+      // If neither profile found, return basic user info
+      console.log("No profile found, returning basic user info")
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name || user.email,
+        role: "volunteer", // Default role
+        active: true
+      }
     } catch (error) {
       console.error("Error getting current user:", error)
       return null

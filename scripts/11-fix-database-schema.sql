@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS volunteers (
 -- 3. Add RLS policies for volunteers table
 ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Volunteers can read own record" ON volunteers;
+DROP POLICY IF EXISTS "Admins can read all volunteers" ON volunteers;
+DROP POLICY IF EXISTS "Volunteers can update own record" ON volunteers;
+DROP POLICY IF EXISTS "Admins can manage volunteers" ON volunteers;
+
 -- Allow volunteers to read their own record
 CREATE POLICY "Volunteers can read own record" ON volunteers
     FOR SELECT USING (auth.uid() = id);

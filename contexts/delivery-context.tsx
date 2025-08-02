@@ -112,29 +112,39 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         seniorsData = result.data
         seniorsError = result.error
       } else {
-        // Volunteers see only their assigned seniors
-        const assignmentsResult = await SupabaseService.getSeniorAssignments({ 
-          volunteerId: user.id, 
-          active: true 
-        })
+              // Volunteers see only their assigned seniors
+      console.log("Loading assignments for volunteer:", user.id)
+      const assignmentsResult = await SupabaseService.getSeniorAssignments({ 
+        volunteerId: user.id, 
+        active: true 
+      })
+      
+      console.log("Assignments result:", assignmentsResult)
+      
+      if (assignmentsResult.data) {
+        // Extract senior IDs from assignments
+        const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
+        console.log("Senior IDs from assignments:", seniorIds)
         
-        if (assignmentsResult.data) {
-          // Extract senior IDs from assignments
-          const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
-          
-          if (seniorIds.length > 0) {
-            // Get senior details for assigned seniors
-            const seniorsResult = await SupabaseService.getSeniors({ active: true })
-            if (seniorsResult.data) {
-              seniorsData = seniorsResult.data.filter((senior: any) => 
-                seniorIds.includes(senior.id)
-              )
-            }
-          } else {
-            seniorsData = []
+        if (seniorIds.length > 0) {
+          // Get senior details for assigned seniors
+          const seniorsResult = await SupabaseService.getSeniors({ active: true })
+          console.log("All seniors result:", seniorsResult)
+          if (seniorsResult.data) {
+            seniorsData = seniorsResult.data.filter((senior: any) => 
+              seniorIds.includes(senior.id)
+            )
+            console.log("Filtered seniors for volunteer:", seniorsData)
           }
+        } else {
+          seniorsData = []
+          console.log("No assignments found for volunteer")
         }
-        seniorsError = assignmentsResult.error
+      } else {
+        seniorsData = []
+        console.log("No assignments data for volunteer")
+      }
+      seniorsError = assignmentsResult.error
       }
 
       if (seniorsError) {
@@ -148,12 +158,15 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       let deliveriesData = null
       let deliveriesError = null
       if (user.id && !isAdmin) { // Added !isAdmin check
+        console.log("Loading today's deliveries for volunteer:", user.id)
         const result = await SupabaseService.getTodaysDeliveries(user.id)
+        console.log("Today's deliveries result:", result)
         deliveriesData = result.data
         deliveriesError = result.error
       } else if (user.id && isAdmin) {
         // For admins, we might want to show all deliveries or just set empty array
         deliveriesData = []
+        console.log("Admin user - no deliveries loaded")
       }
 
       if (deliveriesError) {

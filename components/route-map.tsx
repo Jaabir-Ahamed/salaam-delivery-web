@@ -92,11 +92,15 @@ export function RouteMap({ onNavigate, onSelectSenior }: RouteMapProps) {
                 <p className="text-xs text-gray-600 mt-1">Completed</p>
               </div>
               <div className="bg-orange-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-orange-600">~45</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {seniors.length > 0 ? Math.round(seniors.length * 8) : 0}
+                </p>
                 <p className="text-xs text-gray-600 mt-1">Minutes</p>
               </div>
               <div className="bg-purple-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-purple-600">~12</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {seniors.length > 0 ? Math.round(seniors.length * 2.5) : 0}
+                </p>
                 <p className="text-xs text-gray-600 mt-1">Miles</p>
               </div>
             </div>

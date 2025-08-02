@@ -130,23 +130,37 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                       <Checkbox
                         checked={seniorDeliveryStatus.isDelivered}
                         onCheckedChange={async (checked) => {
-                          const delivery = deliveries.find(d => d.senior_id === senior.id)
-                          const newStatus = checked ? "delivered" : "pending"
-                          
-                          if (delivery) {
-                            // Update existing delivery record
-                            await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
-                          } else {
-                            // Create new delivery record
-                            const today = new Date().toISOString().split('T')[0]
-                            await SupabaseService.createDelivery({
-                              volunteer_id: user?.id || "",
-                              senior_id: senior.id,
-                              delivery_date: today,
-                              status: newStatus
-                            })
+                          try {
+                            console.log("Checkbox clicked for senior:", senior.id, "checked:", checked)
+                            const delivery = deliveries.find(d => d.senior_id === senior.id)
+                            const newStatus = checked ? "delivered" : "pending"
+                            
+                            console.log("Existing delivery:", delivery)
+                            
+                            if (delivery) {
+                              // Update existing delivery record
+                              console.log("Updating delivery:", delivery.id, "to status:", newStatus)
+                              const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
+                              console.log("Update result:", result)
+                            } else {
+                              // Create new delivery record
+                              const today = new Date().toISOString().split('T')[0]
+                              console.log("Creating new delivery for senior:", senior.id, "volunteer:", user?.id)
+                              const result = await SupabaseService.createDelivery({
+                                volunteer_id: user?.id || "",
+                                senior_id: senior.id,
+                                delivery_date: today,
+                                status: newStatus
+                              })
+                              console.log("Create result:", result)
+                            }
+                            
+                            console.log("Refreshing data...")
+                            await refreshData()
+                            console.log("Data refreshed")
+                          } catch (error) {
+                            console.error("Error updating delivery status:", error)
                           }
-                          await refreshData()
                         }}
                         className="w-6 h-6"
                       />

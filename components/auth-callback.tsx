@@ -75,13 +75,19 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
             active: true,
           }
 
-          const { error: volunteerError } = await getSupabase()
+          console.log("Creating volunteer record:", volunteerData)
+          const { data: newVolunteer, error: volunteerError } = await getSupabase()
             .from("volunteers")
             .insert([volunteerData])
+            .select()
+            .single()
 
           if (volunteerError) {
+            console.error("Volunteer creation error:", volunteerError)
             throw volunteerError
           }
+
+          console.log("Volunteer created successfully:", newVolunteer)
 
           // Fetch the newly created volunteer record
           volunteer = await SupabaseService.getCurrentUser()

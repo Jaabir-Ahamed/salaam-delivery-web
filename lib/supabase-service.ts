@@ -68,20 +68,13 @@ export class SupabaseService {
    */
   static async signIn(email: string, password: string) {
     try {
-      console.log("SupabaseService.signIn called with email:", email)
-      console.log("Supabase client available:", !!supabase)
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) {
-        console.error("Supabase auth error:", error)
-        throw error
-      }
+      if (error) throw error
 
-      console.log("Sign in successful for user:", data?.user?.id)
       return { data, error: null }
     } catch (error: any) {
       console.error("Signin error:", error)
@@ -133,6 +126,8 @@ export class SupabaseService {
    */
   static async getCurrentUser() {
     try {
+      console.log("SupabaseService.getCurrentUser called")
+      
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (authError || !user) {
@@ -140,35 +135,49 @@ export class SupabaseService {
         return null
       }
 
-      // Get volunteer profile
-      const { data: volunteer, error: volunteerError } = await supabase
-        .from("volunteers")
-        .select("*")
-        .eq("id", user.id)
-        .single()
+      console.log("User authenticated, fetching profile for:", user.id)
 
-      if (volunteerError) {
+      // Try to get volunteer profile first
+      try {
+        const { data: volunteer, error: volunteerError } = await supabase
+          .from("volunteers")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        if (!volunteerError && volunteer) {
+          console.log("Volunteer profile found")
+          return volunteer
+        }
+      } catch (volunteerError) {
         console.warn("Error fetching volunteer profile:", volunteerError)
-        return null
       }
 
-      // Get admin profile if volunteer not found
-      if (!volunteer) {
+      // Try to get admin profile if volunteer not found
+      try {
         const { data: admin, error: adminError } = await supabase
           .from("admins")
           .select("*")
           .eq("id", user.id)
           .single()
 
-        if (adminError) {
-          console.warn("Error fetching admin profile:", adminError)
-          return null
+        if (!adminError && admin) {
+          console.log("Admin profile found")
+          return admin
         }
-
-        return admin
+      } catch (adminError) {
+        console.warn("Error fetching admin profile:", adminError)
       }
 
-      return volunteer
+      // If neither profile found, return basic user info
+      console.log("No profile found, returning basic user info")
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name || user.email,
+        role: "volunteer", // Default role
+        active: true
+      }
     } catch (error) {
       console.error("Error getting current user:", error)
       return null
@@ -526,6 +535,33 @@ export class SupabaseService {
     } catch (error: any) {
       console.error("Error fetching today's deliveries:", error)
       return { data: [], error: error?.message || "Unknown error" }
+    }
+  }
+
+  /**
+   * Create a new delivery record
+   * @param deliveryData - Delivery data to create
+   * @returns Promise with created delivery data or error
+   */
+  static async createDelivery(deliveryData: {
+    volunteer_id: string
+    senior_id: string
+    delivery_date: string
+    status?: string
+    notes?: string
+  }) {
+    try {
+      const { data, error } = await supabase
+        .from("deliveries")
+        .insert(deliveryData)
+        .select()
+        .single()
+
+      if (error) throw error
+      return { data, error: null }
+    } catch (error: any) {
+      console.error("Error creating delivery:", error)
+      return { data: null, error }
     }
   }
 

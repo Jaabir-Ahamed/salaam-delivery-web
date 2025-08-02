@@ -19,7 +19,6 @@ import { CSVImport } from "@/components/csv-import"
 import { VolunteerManagement } from "@/components/volunteer-management"
 import { SeniorAssignments } from "@/components/senior-assignments"
 import { EnvSetupGuide } from "@/components/env-setup-guide"
-import { NavigationArrow, QuickNavigation } from "@/components/ui/navigation-arrow"
 import type { Senior } from "@/lib/supabase"
 import { DeliveryProvider } from "@/contexts/delivery-context"
 
@@ -153,129 +152,64 @@ function AppContent() {
   // Main application routing - render appropriate page based on currentPage state
   switch (currentPage) {
     case "profile":
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <Profile onNavigate={handleNavigate} />
-          </div>
-        </div>
-      )
+      return <Profile onNavigate={handleNavigate} />
     case "deliveries":
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <DeliveryChecklist onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
-          </div>
-        </div>
-      )
+      return <DeliveryChecklist onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
     case "seniors":
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <SeniorsList onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
-          </div>
-        </div>
-      )
+      return <SeniorsList onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
     case "map":
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <RouteMap onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
-          </div>
-        </div>
-      )
+      return <RouteMap onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
     case "reports":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <AdminReports onNavigate={handleNavigate} />
-          </div>
-        </div>
-      )
+      return <AdminReports onNavigate={handleNavigate} />
     case "manage-seniors":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <ManageSeniors onNavigate={handleNavigate} onEditSenior={handleEditSenior} />
-          </div>
-        </div>
-      )
+      return <ManageSeniors onNavigate={handleNavigate} onEditSenior={handleEditSenior} />
     case "add-senior":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <SeniorRegistrationForm onNavigate={handleNavigate} onSuccess={handleFormSuccess} />
-          </div>
-        </div>
-      )
+      return <SeniorRegistrationForm onNavigate={handleNavigate} onSuccess={handleFormSuccess} />
     case "edit-senior":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <SeniorRegistrationForm
-              onNavigate={handleNavigate}
-              onSuccess={handleFormSuccess}
-              editingSenior={editingSenior}
-            />
-          </div>
-        </div>
+        <SeniorRegistrationForm
+          onNavigate={handleNavigate}
+          onSuccess={handleFormSuccess}
+          editingSenior={editingSenior}
+        />
       )
     case "csv-import":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <CSVImport onImportComplete={handleFormSuccess} />
-          </div>
-        </div>
-      )
+      return <CSVImport onImportComplete={handleFormSuccess} />
     case "manage-volunteers":
       // Admin-only page - redirect non-admins to dashboard
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
+      // Render VolunteerManagement with a back button for better UX
       return (
         <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
+            <button
+              className="mb-4 text-green-700 hover:underline"
+              onClick={() => handleNavigate("dashboard")}
+            >
+              ← Back to Dashboard
+            </button>
             <VolunteerManagement onDataChange={() => {}} />
           </div>
         </div>
@@ -285,15 +219,7 @@ function AppContent() {
       if (user.role !== "admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
-      return (
-        <div className="min-h-screen bg-gray-50">
-          <QuickNavigation onNavigate={handleNavigate} />
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <NavigationArrow onNavigate={handleNavigate} currentPage={currentPage} />
-            <SeniorAssignments onNavigate={handleNavigate} />
-          </div>
-        </div>
-      )
+      return <SeniorAssignments onNavigate={handleNavigate} />
     case "env-setup":
       return <EnvSetupGuide onNavigate={handleNavigate} />
     default:

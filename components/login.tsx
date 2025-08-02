@@ -31,26 +31,27 @@ export function Login({ onNavigateToSignup, onForgotPassword, onLoginSuccess }: 
 
     try {
       console.log("Attempting to sign in with:", email)
-      const result = await SupabaseService.signIn(email, password)
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Login timeout - please try again")), 10000)
+      })
+      
+      const signInPromise = SupabaseService.signIn(email, password)
+      const result = await Promise.race([signInPromise, timeoutPromise]) as any
 
       if (result.error) {
-        console.error("Sign in error:", result.error)
         throw result.error
       }
 
       if (result.data?.user) {
-        console.log("User authenticated, getting profile...")
-        // Get the user's profile
-        const volunteer = await SupabaseService.getCurrentUser()
-        if (volunteer) {
-          console.log("Profile found:", volunteer)
-          onLoginSuccess(volunteer)
-        } else {
-          throw new Error("User profile not found. Please contact support.")
-        }
+        console.log("Sign in successful, user authenticated")
+        // The auth state change will handle profile loading
+        // Just return success to clear the loading state
+        onLoginSuccess(result.data.user)
       }
     } catch (error: any) {
-      console.error("Login error details:", error)
+      console.error("Login error:", error)
       setError(error.message || "An error occurred during login")
     } finally {
       setIsLoading(false)

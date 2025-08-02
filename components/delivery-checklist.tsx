@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useDelivery } from "@/contexts/delivery-context"
+import { useAuth } from "@/contexts/auth-context"
 import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
 
@@ -21,6 +22,7 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     deliveryStatus,
     refreshData
   } = useDelivery()
+  const { user } = useAuth()
 
   // Calculate counts from the data
   const completedCount = Object.values(deliveryStatus).filter(status => status.isDelivered).length
@@ -42,8 +44,19 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     // Mark all deliveries as completed
     for (const senior of seniors) {
       const delivery = deliveries.find(d => d.senior_id === senior.id)
-      if (delivery && delivery.status !== "delivered") {
-        await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
+      if (delivery) {
+        if (delivery.status !== "delivered") {
+          await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
+        }
+      } else {
+        // Create new delivery record if it doesn't exist
+        const today = new Date().toISOString().split('T')[0]
+        await SupabaseService.createDelivery({
+          volunteer_id: user?.id || "",
+          senior_id: senior.id,
+          delivery_date: today,
+          status: "delivered"
+        })
       }
     }
     await refreshData()
@@ -115,13 +128,38 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 pt-1">
                       <Checkbox
-                          checked={seniorDeliveryStatus.isDelivered}
-                        onCheckedChange={async () => {
-                          const delivery = deliveries.find(d => d.senior_id === senior.id)
-                          if (delivery) {
-                            const newStatus = seniorDeliveryStatus.isDelivered ? "pending" : "delivered"
-                            await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
+                        checked={seniorDeliveryStatus.isDelivered}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            console.log("Checkbox clicked for senior:", senior.id, "checked:", checked)
+                            const delivery = deliveries.find(d => d.senior_id === senior.id)
+                            const newStatus = checked ? "delivered" : "pending"
+                            
+                            console.log("Existing delivery:", delivery)
+                            
+                            if (delivery) {
+                              // Update existing delivery record
+                              console.log("Updating delivery:", delivery.id, "to status:", newStatus)
+                              const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
+                              console.log("Update result:", result)
+                            } else {
+                              // Create new delivery record
+                              const today = new Date().toISOString().split('T')[0]
+                              console.log("Creating new delivery for senior:", senior.id, "volunteer:", user?.id)
+                              const result = await SupabaseService.createDelivery({
+                                volunteer_id: user?.id || "",
+                                senior_id: senior.id,
+                                delivery_date: today,
+                                status: newStatus
+                              })
+                              console.log("Create result:", result)
+                            }
+                            
+                            console.log("Refreshing data...")
                             await refreshData()
+                            console.log("Data refreshed")
+                          } catch (error) {
+                            console.error("Error updating delivery status:", error)
                           }
                         }}
                         className="w-6 h-6"

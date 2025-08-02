@@ -191,7 +191,10 @@ export class SupabaseService {
   static async isCurrentUserAdmin() {
     try {
       const user = await this.getCurrentUser()
-      return user?.role === "admin" || user?.role === "super_admin"
+      console.log("Checking admin status for user:", user?.id, "role:", user?.role)
+      const isAdmin = user?.role === "admin" || user?.role === "super_admin"
+      console.log("Is admin:", isAdmin)
+      return isAdmin
     } catch (error) {
       console.error("Error checking admin status:", error)
       return false
@@ -522,8 +525,7 @@ export class SupabaseService {
             name,
             address,
             phone,
-            dietary_restrictions,
-            accessibility_needs
+            dietary_restrictions
           )
         `)
         .eq("volunteer_id", volunteerId)

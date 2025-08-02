@@ -157,6 +157,8 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       // Load today's deliveries for current volunteer (only if user has a volunteer ID and is not admin)
       let deliveriesData = null
       let deliveriesError = null
+      console.log("User ID:", user.id, "Is Admin:", isAdmin)
+      
       if (user.id && !isAdmin) { // Added !isAdmin check
         console.log("Loading today's deliveries for volunteer:", user.id)
         const result = await SupabaseService.getTodaysDeliveries(user.id)
@@ -167,6 +169,9 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         // For admins, we might want to show all deliveries or just set empty array
         deliveriesData = []
         console.log("Admin user - no deliveries loaded")
+      } else {
+        console.log("No user ID or admin check failed")
+        deliveriesData = []
       }
 
       if (deliveriesError) {
@@ -178,14 +183,21 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
 
       // Update delivery status based on loaded deliveries
       const newDeliveryStatus: Record<string, DeliveryStatus> = {}
+      console.log("Processing deliveries data:", deliveriesData)
+      
       if (deliveriesData) {
         deliveriesData.forEach((delivery: any) => {
           if (delivery.senior_id) {
+            const isDelivered = delivery.status === "delivered" || delivery.status === "family_confirmed"
             newDeliveryStatus[delivery.senior_id] = {
-              isDelivered: delivery.status === "delivered" || delivery.status === "family_confirmed",
+              isDelivered,
               status: delivery.status || "pending",
               notes: delivery.notes
             }
+            console.log(`Delivery status for senior ${delivery.senior_id}:`, {
+              isDelivered,
+              status: delivery.status
+            })
           }
         })
       }
@@ -198,6 +210,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
             status: "pending",
             notes: ""
           }
+          console.log(`No delivery record for senior ${senior.id}, initializing as pending`)
         }
       })
       

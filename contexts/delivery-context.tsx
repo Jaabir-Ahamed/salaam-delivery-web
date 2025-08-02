@@ -159,11 +159,18 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       let deliveriesError = null
       console.log("User ID:", user.id, "Is Admin:", isAdmin)
       
-      // For testing purposes, allow admin user to also load deliveries
-      if (user.id) {
-        console.log("Loading today's deliveries for user:", user.id)
+      if (user.id && !isAdmin) {
+        // For volunteers, load their specific deliveries
+        console.log("Loading today's deliveries for volunteer:", user.id)
         const result = await SupabaseService.getTodaysDeliveries(user.id)
         console.log("Today's deliveries result:", result)
+        deliveriesData = result.data
+        deliveriesError = result.error
+      } else if (user.id && isAdmin) {
+        // For admins, load deliveries for testing purposes
+        console.log("Loading today's deliveries for admin user:", user.id)
+        const result = await SupabaseService.getTodaysDeliveries(user.id)
+        console.log("Today's deliveries result for admin:", result)
         deliveriesData = result.data
         deliveriesError = result.error
       } else {

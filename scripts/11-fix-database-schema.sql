@@ -49,23 +49,23 @@ CREATE POLICY "Admins can manage volunteers" ON volunteers
         )
     );
 
--- 4. Fix user role for the specific user (change from admin to volunteer)
-UPDATE auth.users 
-SET raw_user_meta_data = jsonb_set(
-    COALESCE(raw_user_meta_data, '{}'::jsonb),
-    '{role}',
-    '"volunteer"'
-)
-WHERE id = '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405';
+-- 4. Keep user as admin but ensure they have a volunteer record for testing
+-- UPDATE auth.users 
+-- SET raw_user_meta_data = jsonb_set(
+--     COALESCE(raw_user_meta_data, '{}'::jsonb),
+--     '{role}',
+--     '"volunteer"'
+-- )
+-- WHERE id = '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405';
 
--- 5. Ensure the user has a volunteer record
+-- 5. Ensure the user has a volunteer record (for testing deliveries)
 INSERT INTO volunteers (id, name, email, phone, role)
 SELECT 
     '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405',
     COALESCE(raw_user_meta_data->>'name', 'Admin User'),
     email,
     raw_user_meta_data->>'phone',
-    'volunteer'
+    'admin'
 FROM auth.users 
 WHERE id = '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405'
 ON CONFLICT (id) DO NOTHING;

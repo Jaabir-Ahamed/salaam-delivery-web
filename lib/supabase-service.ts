@@ -554,6 +554,32 @@ export class SupabaseService {
     notes?: string
   }) {
     try {
+      // For admin users, we need to ensure they have a volunteer record
+      const { data: volunteer, error: volunteerError } = await supabase
+        .from("volunteers")
+        .select("id")
+        .eq("id", deliveryData.volunteer_id)
+        .single()
+
+      if (volunteerError || !volunteer) {
+        // Create a volunteer record for admin users if it doesn't exist
+        const { data: newVolunteer, error: createError } = await supabase
+          .from("volunteers")
+          .insert({
+            id: deliveryData.volunteer_id,
+            name: "Admin User",
+            email: "admin@example.com",
+            role: "admin"
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error("Error creating volunteer record:", createError)
+          return { data: null, error: createError }
+        }
+      }
+
       const { data, error } = await supabase
         .from("deliveries")
         .insert(deliveryData)

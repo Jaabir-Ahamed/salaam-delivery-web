@@ -525,7 +525,8 @@ export class SupabaseService {
             name,
             address,
             phone,
-            dietary_restrictions
+            dietary_restrictions,
+            accessibility_needs
           )
         `)
         .eq("volunteer_id", volunteerId)

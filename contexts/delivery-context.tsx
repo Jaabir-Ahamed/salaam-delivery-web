@@ -159,18 +159,15 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       let deliveriesError = null
       console.log("User ID:", user.id, "Is Admin:", isAdmin)
       
-      if (user.id && !isAdmin) { // Added !isAdmin check
-        console.log("Loading today's deliveries for volunteer:", user.id)
+      // For testing purposes, allow admin user to also load deliveries
+      if (user.id) {
+        console.log("Loading today's deliveries for user:", user.id)
         const result = await SupabaseService.getTodaysDeliveries(user.id)
         console.log("Today's deliveries result:", result)
         deliveriesData = result.data
         deliveriesError = result.error
-      } else if (user.id && isAdmin) {
-        // For admins, we might want to show all deliveries or just set empty array
-        deliveriesData = []
-        console.log("Admin user - no deliveries loaded")
       } else {
-        console.log("No user ID or admin check failed")
+        console.log("No user ID")
         deliveriesData = []
       }
 

@@ -191,10 +191,7 @@ export class SupabaseService {
   static async isCurrentUserAdmin() {
     try {
       const user = await this.getCurrentUser()
-      console.log("Checking admin status for user:", user?.id, "role:", user?.role)
-      const isAdmin = user?.role === "admin" || user?.role === "super_admin"
-      console.log("Is admin:", isAdmin)
-      return isAdmin
+      return user?.role === "admin" || user?.role === "super_admin"
     } catch (error) {
       console.error("Error checking admin status:", error)
       return false
@@ -538,59 +535,6 @@ export class SupabaseService {
     } catch (error: any) {
       console.error("Error fetching today's deliveries:", error)
       return { data: [], error: error?.message || "Unknown error" }
-    }
-  }
-
-  /**
-   * Create a new delivery record
-   * @param deliveryData - Delivery data to create
-   * @returns Promise with created delivery data or error
-   */
-  static async createDelivery(deliveryData: {
-    volunteer_id: string
-    senior_id: string
-    delivery_date: string
-    status?: string
-    notes?: string
-  }) {
-    try {
-      // For admin users, we need to ensure they have a volunteer record
-      const { data: volunteer, error: volunteerError } = await supabase
-        .from("volunteers")
-        .select("id")
-        .eq("id", deliveryData.volunteer_id)
-        .single()
-
-      if (volunteerError || !volunteer) {
-        // Create a volunteer record for admin users if it doesn't exist
-        const { data: newVolunteer, error: createError } = await supabase
-          .from("volunteers")
-          .insert({
-            id: deliveryData.volunteer_id,
-            name: "Admin User",
-            email: "admin@example.com",
-            role: "admin"
-          })
-          .select()
-          .single()
-
-        if (createError) {
-          console.error("Error creating volunteer record:", createError)
-          return { data: null, error: createError }
-        }
-      }
-
-      const { data, error } = await supabase
-        .from("deliveries")
-        .insert(deliveryData)
-        .select()
-        .single()
-
-      if (error) throw error
-      return { data, error: null }
-    } catch (error: any) {
-      console.error("Error creating delivery:", error)
-      return { data: null, error }
     }
   }
 

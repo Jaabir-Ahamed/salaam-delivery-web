@@ -112,39 +112,29 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         seniorsData = result.data
         seniorsError = result.error
       } else {
-              // Volunteers see only their assigned seniors
-      console.log("Loading assignments for volunteer:", user.id)
-      const assignmentsResult = await SupabaseService.getSeniorAssignments({ 
-        volunteerId: user.id, 
-        active: true 
-      })
-      
-      console.log("Assignments result:", assignmentsResult)
-      
-      if (assignmentsResult.data) {
-        // Extract senior IDs from assignments
-        const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
-        console.log("Senior IDs from assignments:", seniorIds)
+        // Volunteers see only their assigned seniors
+        const assignmentsResult = await SupabaseService.getSeniorAssignments({ 
+          volunteerId: user.id, 
+          active: true 
+        })
         
-        if (seniorIds.length > 0) {
-          // Get senior details for assigned seniors
-          const seniorsResult = await SupabaseService.getSeniors({ active: true })
-          console.log("All seniors result:", seniorsResult)
-          if (seniorsResult.data) {
-            seniorsData = seniorsResult.data.filter((senior: any) => 
-              seniorIds.includes(senior.id)
-            )
-            console.log("Filtered seniors for volunteer:", seniorsData)
+        if (assignmentsResult.data) {
+          // Extract senior IDs from assignments
+          const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
+          
+          if (seniorIds.length > 0) {
+            // Get senior details for assigned seniors
+            const seniorsResult = await SupabaseService.getSeniors({ active: true })
+            if (seniorsResult.data) {
+              seniorsData = seniorsResult.data.filter((senior: any) => 
+                seniorIds.includes(senior.id)
+              )
+            }
+          } else {
+            seniorsData = []
           }
-        } else {
-          seniorsData = []
-          console.log("No assignments found for volunteer")
         }
-      } else {
-        seniorsData = []
-        console.log("No assignments data for volunteer")
-      }
-      seniorsError = assignmentsResult.error
+        seniorsError = assignmentsResult.error
       }
 
       if (seniorsError) {
@@ -157,24 +147,12 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       // Load today's deliveries for current volunteer (only if user has a volunteer ID and is not admin)
       let deliveriesData = null
       let deliveriesError = null
-      console.log("User ID:", user.id, "Is Admin:", isAdmin)
-      
-      if (user.id && !isAdmin) {
-        // For volunteers, load their specific deliveries
-        console.log("Loading today's deliveries for volunteer:", user.id)
+      if (user.id && !isAdmin) { // Added !isAdmin check
         const result = await SupabaseService.getTodaysDeliveries(user.id)
-        console.log("Today's deliveries result:", result)
         deliveriesData = result.data
         deliveriesError = result.error
       } else if (user.id && isAdmin) {
-        // For admins, load deliveries for testing purposes
-        console.log("Loading today's deliveries for admin user:", user.id)
-        const result = await SupabaseService.getTodaysDeliveries(user.id)
-        console.log("Today's deliveries result for admin:", result)
-        deliveriesData = result.data
-        deliveriesError = result.error
-      } else {
-        console.log("No user ID")
+        // For admins, we might want to show all deliveries or just set empty array
         deliveriesData = []
       }
 
@@ -187,21 +165,14 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
 
       // Update delivery status based on loaded deliveries
       const newDeliveryStatus: Record<string, DeliveryStatus> = {}
-      console.log("Processing deliveries data:", deliveriesData)
-      
       if (deliveriesData) {
         deliveriesData.forEach((delivery: any) => {
           if (delivery.senior_id) {
-            const isDelivered = delivery.status === "delivered" || delivery.status === "family_confirmed"
             newDeliveryStatus[delivery.senior_id] = {
-              isDelivered,
+              isDelivered: delivery.status === "delivered" || delivery.status === "family_confirmed",
               status: delivery.status || "pending",
               notes: delivery.notes
             }
-            console.log(`Delivery status for senior ${delivery.senior_id}:`, {
-              isDelivered,
-              status: delivery.status
-            })
           }
         })
       }
@@ -214,7 +185,6 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
             status: "pending",
             notes: ""
           }
-          console.log(`No delivery record for senior ${senior.id}, initializing as pending`)
         }
       })
       

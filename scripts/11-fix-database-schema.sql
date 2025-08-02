@@ -7,16 +7,15 @@ ADD COLUMN IF NOT EXISTS accessibility_needs TEXT;
 
 -- 2. Ensure volunteers table has correct structure
 CREATE TABLE IF NOT EXISTS volunteers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    email TEXT NOT NULL,
     phone TEXT,
-    address TEXT,
-    vehicle_info TEXT,
-    availability TEXT,
+    role TEXT NOT NULL CHECK (role IN ('volunteer', 'admin')) DEFAULT 'volunteer',
+    profile_picture TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    active BOOLEAN DEFAULT TRUE
 );
 
 -- 3. Add RLS policies for volunteers table
@@ -24,7 +23,7 @@ ALTER TABLE volunteers ENABLE ROW LEVEL SECURITY;
 
 -- Allow volunteers to read their own record
 CREATE POLICY "Volunteers can read own record" ON volunteers
-    FOR SELECT USING (auth.uid() = user_id);
+    FOR SELECT USING (auth.uid() = id);
 
 -- Allow admins to read all volunteer records
 CREATE POLICY "Admins can read all volunteers" ON volunteers
@@ -38,7 +37,7 @@ CREATE POLICY "Admins can read all volunteers" ON volunteers
 
 -- Allow volunteers to update their own record
 CREATE POLICY "Volunteers can update own record" ON volunteers
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = id);
 
 -- Allow admins to insert/update/delete volunteer records
 CREATE POLICY "Admins can manage volunteers" ON volunteers
@@ -60,32 +59,28 @@ SET raw_user_meta_data = jsonb_set(
 WHERE id = '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405';
 
 -- 5. Ensure the user has a volunteer record
-INSERT INTO volunteers (user_id, name, email, phone, address, vehicle_info, availability)
+INSERT INTO volunteers (id, name, email, phone, role)
 SELECT 
     '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405',
     COALESCE(raw_user_meta_data->>'name', 'Admin User'),
     email,
     raw_user_meta_data->>'phone',
-    raw_user_meta_data->>'address',
-    raw_user_meta_data->>'vehicle_info',
-    raw_user_meta_data->>'availability'
+    'volunteer'
 FROM auth.users 
 WHERE id = '2e4c6b4a-d2c1-40a0-8670-7dc7d74c4405'
-ON CONFLICT (user_id) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- 6. Add trigger to automatically create volunteer records on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO volunteers (user_id, name, email, phone, address, vehicle_info, availability)
+    INSERT INTO volunteers (id, name, email, phone, role)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'name', 'New User'),
         NEW.email,
         NEW.raw_user_meta_data->>'phone',
-        NEW.raw_user_meta_data->>'address',
-        NEW.raw_user_meta_data->>'vehicle_info',
-        NEW.raw_user_meta_data->>'availability'
+        'volunteer'
     );
     RETURN NEW;
 END;

@@ -619,6 +619,8 @@ export class SupabaseService {
    */
   static async getUnassignedSeniors() {
     try {
+      console.log("getUnassignedSeniors: Starting to fetch data")
+      
       // First, try to get all active seniors
       const { data: allSeniors, error: seniorsError } = await supabase
         .from("seniors")
@@ -631,6 +633,8 @@ export class SupabaseService {
         return { data: [], error: seniorsError.message || "Failed to fetch seniors" }
       }
 
+      console.log("getUnassignedSeniors: Found", allSeniors?.length || 0, "active seniors")
+
       // Then, try to get all active assignments
       const { data: assignments, error: assignmentsError } = await supabase
         .from("senior_assignments")
@@ -640,13 +644,17 @@ export class SupabaseService {
       if (assignmentsError) {
         console.error("Error fetching assignments:", assignmentsError)
         // If we can't fetch assignments, return all seniors as unassigned
+        console.log("getUnassignedSeniors: Returning all seniors as unassigned due to assignment fetch error")
         return { data: allSeniors || [], error: null }
       }
+
+      console.log("getUnassignedSeniors: Found", assignments?.length || 0, "active assignments")
 
       // Filter out seniors who have active assignments
       const assignedSeniorIds = new Set(assignments?.map((a: any) => a.senior_id) || [])
       const unassignedSeniors = (allSeniors || []).filter((senior: any) => !assignedSeniorIds.has(senior.id))
 
+      console.log("getUnassignedSeniors: Returning", unassignedSeniors.length, "unassigned seniors")
       return { data: unassignedSeniors, error: null }
     } catch (error: any) {
       console.error("Error fetching unassigned seniors:", error)

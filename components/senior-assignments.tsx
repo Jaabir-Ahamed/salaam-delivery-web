@@ -77,7 +77,10 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
       if (assignmentsResult.error) throw new Error(typeof assignmentsResult.error === 'string' ? assignmentsResult.error : 'Failed to load assignments')
       if (seniorsResult.error) throw new Error(typeof seniorsResult.error === 'string' ? seniorsResult.error : 'Failed to load seniors')
       if (volunteersResult.error) throw new Error(typeof volunteersResult.error === 'string' ? volunteersResult.error : 'Failed to load volunteers')
-      if (unassignedResult.error) throw new Error(typeof unassignedResult.error === 'string' ? unassignedResult.error : 'Failed to load unassigned seniors: ' + JSON.stringify(unassignedResult.error))
+      if (unassignedResult.error) {
+        console.error("Unassigned seniors error:", unassignedResult.error)
+        throw new Error(typeof unassignedResult.error === 'string' ? unassignedResult.error : 'Failed to load unassigned seniors: ' + JSON.stringify(unassignedResult.error))
+      }
 
       setAssignments(assignmentsResult.data || [])
       setSeniors(seniorsResult.data || [])

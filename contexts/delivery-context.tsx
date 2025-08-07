@@ -30,6 +30,7 @@ interface DeliveryContextType {
   deliveryStatus: Record<string, DeliveryStatus>
   getDeliveryStatus: (seniorId: string) => DeliveryStatus
   refreshData: () => Promise<void>
+  updateDeliveryStatus: (seniorId: string, status: string) => void
 }
 
 // ============================================================================
@@ -210,6 +211,22 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
     await loadSeniorsAndDeliveries()
   }
 
+  /**
+   * Update delivery status locally without triggering full data reload
+   * @param seniorId - Senior's unique identifier
+   * @param status - New delivery status
+   */
+  const updateDeliveryStatus = (seniorId: string, status: string) => {
+    setDeliveryStatus(prev => ({
+      ...prev,
+      [seniorId]: {
+        ...prev[seniorId],
+        isDelivered: status === "delivered" || status === "family_confirmed",
+        status: status
+      }
+    }))
+  }
+
   // ============================================================================
   // DATA LOADING EFFECTS
   // ============================================================================
@@ -243,6 +260,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
     deliveryStatus,
     getDeliveryStatus,
     refreshData,
+    updateDeliveryStatus,
   }
 
   return (

@@ -20,7 +20,8 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     deliveries,
     isLoading,
     deliveryStatus,
-    refreshData
+    refreshData,
+    updateDeliveryStatus
   } = useDelivery()
   
   const { user } = useAuth()
@@ -126,17 +127,22 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                               const delivery = deliveries.find(d => d.senior_id === senior.id)
                               console.log("Senior:", senior.id, "Delivery found:", !!delivery, "Current status:", seniorDeliveryStatus)
                               
+                              // Optimistic update - update the UI immediately
+                              const newStatus = checked ? "delivered" : "pending"
+                              updateDeliveryStatus(senior.id, newStatus)
+                              
                               if (delivery) {
-                                const newStatus = checked ? "delivered" : "pending"
                                 console.log(`Updating delivery ${delivery.id} to status: ${newStatus}`)
                                 
                                 const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
                                 
                                 if (result.success) {
                                   console.log("Delivery updated successfully")
-                                  await refreshData()
+                                  // UI already updated optimistically
                                 } else {
                                   console.error("Failed to update delivery:", result.error)
+                                  // Revert optimistic update on error
+                                  updateDeliveryStatus(senior.id, checked ? "pending" : "delivered")
                                 }
                               } else {
                                 console.warn("No delivery record found for senior:", senior.id)
@@ -154,16 +160,22 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                                   
                                   if (result.data) {
                                     console.log("Delivery record created successfully")
-                                    await refreshData()
+                                    // UI already updated optimistically
                                   } else {
                                     console.error("Failed to create delivery record:", result.error)
+                                    // Revert optimistic update on error
+                                    updateDeliveryStatus(senior.id, checked ? "pending" : "delivered")
                                   }
                                 } else {
                                   console.error("No current user found")
+                                  // Revert optimistic update on error
+                                  updateDeliveryStatus(senior.id, checked ? "pending" : "delivered")
                                 }
                               }
                             } catch (error) {
                               console.error("Error updating delivery status:", error)
+                              // Revert optimistic update on error
+                              updateDeliveryStatus(senior.id, checked ? "pending" : "delivered")
                             }
                           }
                         }}

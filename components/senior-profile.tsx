@@ -20,7 +20,7 @@ interface SeniorProfileProps {
 }
 
 export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProfileProps) {
-  const { seniors, deliveries, isLoading, deliveryStatus, refreshData } = useDelivery()
+  const { seniors, deliveries, isLoading, deliveryStatus, refreshData, updateDeliveryStatus } = useDelivery()
   const { user } = useAuth()
   const [senior, setSenior] = useState<Senior | null>(null)
   const [deliveryNote, setDeliveryNote] = useState("")
@@ -56,17 +56,22 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
         const delivery = deliveries.find(d => d.senior_id === seniorId)
         console.log("Senior:", seniorId, "Delivery found:", !!delivery, "Current status:", currentDeliveryStatus)
         
+        // Optimistic update - update the UI immediately
+        const newStatus = checked ? "delivered" : "pending"
+        updateDeliveryStatus(seniorId, newStatus)
+        
         if (delivery) {
-          const newStatus = checked ? "delivered" : "pending"
           console.log(`Updating delivery ${delivery.id} to status: ${newStatus}`)
           
           const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
           
           if (result.success) {
             console.log("Delivery updated successfully")
-            await refreshData()
+            // UI already updated optimistically
           } else {
             console.error("Failed to update delivery:", result.error)
+            // Revert optimistic update on error
+            updateDeliveryStatus(seniorId, checked ? "pending" : "delivered")
           }
         } else {
           console.warn("No delivery record found for senior:", seniorId)
@@ -84,16 +89,22 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
             
             if (result.data) {
               console.log("Delivery record created successfully")
-              await refreshData()
+              // UI already updated optimistically
             } else {
               console.error("Failed to create delivery record:", result.error)
+              // Revert optimistic update on error
+              updateDeliveryStatus(seniorId, checked ? "pending" : "delivered")
             }
           } else {
             console.error("No current user found")
+            // Revert optimistic update on error
+            updateDeliveryStatus(seniorId, checked ? "pending" : "delivered")
           }
         }
       } catch (error) {
         console.error("Error updating delivery status:", error)
+        // Revert optimistic update on error
+        updateDeliveryStatus(seniorId, checked ? "pending" : "delivered")
       }
     }
   }

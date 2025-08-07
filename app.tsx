@@ -161,25 +161,25 @@ function AppContent() {
       return <RouteMap onNavigate={handleNavigate} onSelectSenior={handleSelectSenior} />
     case "reports":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <AdminReports onNavigate={handleNavigate} />
     case "manage-seniors":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <ManageSeniors onNavigate={handleNavigate} onEditSenior={handleEditSenior} />
     case "add-senior":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <SeniorRegistrationForm onNavigate={handleNavigate} onSuccess={handleFormSuccess} />
     case "edit-senior":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return (
@@ -191,13 +191,13 @@ function AppContent() {
       )
     case "csv-import":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <CSVImport onImportComplete={handleFormSuccess} />
     case "manage-volunteers":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       // Render VolunteerManagement with a back button for better UX
@@ -216,7 +216,7 @@ function AppContent() {
       )
     case "senior-assignments":
       // Admin-only page - redirect non-admins to dashboard
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "super_admin") {
         return <Dashboard onNavigate={handleNavigate} />
       }
       return <SeniorAssignments onNavigate={handleNavigate} />

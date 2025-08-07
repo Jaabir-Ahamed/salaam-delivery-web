@@ -137,46 +137,63 @@ export class SupabaseService {
 
       console.log("User authenticated, fetching profile for:", user.id)
 
-      // Try to get volunteer profile first
-      try {
-        const { data: volunteer, error: volunteerError } = await supabase
-          .from("volunteers")
-          .select("*")
-          .eq("id", user.id)
-          .single()
-
-        if (!volunteerError && volunteer) {
-          console.log("Volunteer profile found")
-          return volunteer
-        }
-      } catch (volunteerError) {
-        console.warn("Error fetching volunteer profile:", volunteerError)
-      }
-
-      // Try to get admin profile if volunteer not found
+      // Try to get admin profile first (since admin users should be in admins table)
       try {
         const { data: admin, error: adminError } = await supabase
           .from("admins")
           .select("*")
           .eq("id", user.id)
+          .eq("active", true)
           .single()
 
         if (!adminError && admin) {
           console.log("Admin profile found")
-          return admin
+          return {
+            ...user,
+            name: admin.name,
+            phone: admin.phone,
+            role: admin.role,
+            active: admin.active,
+            email: admin.email
+          }
         }
       } catch (adminError) {
         console.warn("Error fetching admin profile:", adminError)
       }
 
+      // Try to get volunteer profile if admin not found
+      try {
+        const { data: volunteer, error: volunteerError } = await supabase
+          .from("volunteers")
+          .select("*")
+          .eq("id", user.id)
+          .eq("active", true)
+          .single()
+
+        if (!volunteerError && volunteer) {
+          console.log("Volunteer profile found")
+          return {
+            ...user,
+            name: volunteer.name,
+            phone: volunteer.phone,
+            role: volunteer.role,
+            languages: volunteer.languages,
+            active: volunteer.active,
+            email: volunteer.email
+          }
+        }
+      } catch (volunteerError) {
+        console.warn("Error fetching volunteer profile:", volunteerError)
+      }
+
       // If neither profile found, return basic user info
       console.log("No profile found, returning basic user info")
       return {
-        id: user.id,
-        email: user.email,
+        ...user,
         name: user.user_metadata?.name || user.email,
         role: "volunteer", // Default role
-        active: true
+        active: true,
+        email: user.email
       }
     } catch (error) {
       console.error("Error getting current user:", error)
@@ -191,7 +208,10 @@ export class SupabaseService {
   static async isCurrentUserAdmin() {
     try {
       const user = await this.getCurrentUser()
-      return user?.role === "admin" || user?.role === "super_admin"
+      if (!user) return false
+      
+      // Check if user has admin role in either admins or volunteers table
+      return user.role === "admin" || user.role === "super_admin"
     } catch (error) {
       console.error("Error checking admin status:", error)
       return false

@@ -254,7 +254,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </Card>
 
           {/* Admin-only sections */}
-          {user?.role === "admin" && (
+          {(user?.role === "admin" || user?.role === "super_admin") && (
             <>
               <Card
                 className="cursor-pointer hover:shadow-lg transition-shadow"

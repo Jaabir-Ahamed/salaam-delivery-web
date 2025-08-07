@@ -68,34 +68,42 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
 
       console.log("Loading senior assignments data...")
 
-      // Load all data in parallel
-      const [assignmentsResult, seniorsResult, volunteersResult, unassignedResult] = await Promise.all([
-        SupabaseService.getSeniorAssignments(),
-        SupabaseService.getSeniors(),
-        SupabaseService.getVolunteers(),
-        SupabaseService.getUnassignedSeniors()
-      ])
-
+      // Load data sequentially to identify which call is failing
+      console.log("1. Loading assignments...")
+      const assignmentsResult = await SupabaseService.getSeniorAssignments()
       console.log("Assignments result:", assignmentsResult)
-      console.log("Seniors result:", seniorsResult)
-      console.log("Volunteers result:", volunteersResult)
-      console.log("Unassigned result:", unassignedResult)
 
       if (assignmentsResult.error) {
         console.error("Assignments error:", assignmentsResult.error)
         throw new Error(typeof assignmentsResult.error === 'string' ? assignmentsResult.error : 'Failed to load assignments')
       }
+
+      console.log("2. Loading seniors...")
+      const seniorsResult = await SupabaseService.getSeniors()
+      console.log("Seniors result:", seniorsResult)
+
       if (seniorsResult.error) {
         console.error("Seniors error:", seniorsResult.error)
         throw new Error(typeof seniorsResult.error === 'string' ? seniorsResult.error : 'Failed to load seniors')
       }
+
+      console.log("3. Loading volunteers...")
+      const volunteersResult = await SupabaseService.getVolunteers()
+      console.log("Volunteers result:", volunteersResult)
+
       if (volunteersResult.error) {
         console.error("Volunteers error:", volunteersResult.error)
         throw new Error(typeof volunteersResult.error === 'string' ? volunteersResult.error : 'Failed to load volunteers')
       }
+
+      console.log("4. Loading unassigned seniors...")
+      const unassignedResult = await SupabaseService.getUnassignedSeniors()
+      console.log("Unassigned result:", unassignedResult)
+
       if (unassignedResult.error) {
         console.error("Unassigned seniors error:", unassignedResult.error)
-        throw new Error(typeof unassignedResult.error === 'string' ? unassignedResult.error : 'Failed to load unassigned seniors: ' + JSON.stringify(unassignedResult.error))
+        // Don't throw error for unassigned seniors, just log it
+        console.warn("Unassigned seniors failed, continuing with empty array")
       }
 
       setAssignments(assignmentsResult.data || [])

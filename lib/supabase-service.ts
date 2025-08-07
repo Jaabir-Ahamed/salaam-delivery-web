@@ -848,6 +848,8 @@ export class SupabaseService {
     active?: boolean 
   }) {
     try {
+      console.log("getSeniorAssignments: Starting with filters:", filters)
+      
       let query = supabase
         .from("senior_assignments")
         .select(`
@@ -880,7 +882,26 @@ export class SupabaseService {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        console.error("getSeniorAssignments: Error with complex query:", error)
+        
+        // Fallback: try simple query without joins
+        console.log("getSeniorAssignments: Trying fallback simple query...")
+        const { data: simpleData, error: simpleError } = await supabase
+          .from("senior_assignments")
+          .select("*")
+          .order("created_at", { ascending: false })
+
+        if (simpleError) {
+          console.error("getSeniorAssignments: Fallback query also failed:", simpleError)
+          throw simpleError
+        }
+
+        console.log("getSeniorAssignments: Fallback query successful, returning", simpleData?.length || 0, "assignments")
+        return { data: simpleData || [], error: null }
+      }
+
+      console.log("getSeniorAssignments: Complex query successful, returning", data?.length || 0, "assignments")
       return { data: data || [], error: null }
     } catch (error: any) {
       console.error("Error fetching senior assignments:", error)

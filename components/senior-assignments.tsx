@@ -66,6 +66,8 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
       setIsLoading(true)
       setError("")
 
+      console.log("Loading senior assignments data...")
+
       // Load all data in parallel
       const [assignmentsResult, seniorsResult, volunteersResult, unassignedResult] = await Promise.all([
         SupabaseService.getSeniorAssignments(),
@@ -74,9 +76,23 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
         SupabaseService.getUnassignedSeniors()
       ])
 
-      if (assignmentsResult.error) throw new Error(typeof assignmentsResult.error === 'string' ? assignmentsResult.error : 'Failed to load assignments')
-      if (seniorsResult.error) throw new Error(typeof seniorsResult.error === 'string' ? seniorsResult.error : 'Failed to load seniors')
-      if (volunteersResult.error) throw new Error(typeof volunteersResult.error === 'string' ? volunteersResult.error : 'Failed to load volunteers')
+      console.log("Assignments result:", assignmentsResult)
+      console.log("Seniors result:", seniorsResult)
+      console.log("Volunteers result:", volunteersResult)
+      console.log("Unassigned result:", unassignedResult)
+
+      if (assignmentsResult.error) {
+        console.error("Assignments error:", assignmentsResult.error)
+        throw new Error(typeof assignmentsResult.error === 'string' ? assignmentsResult.error : 'Failed to load assignments')
+      }
+      if (seniorsResult.error) {
+        console.error("Seniors error:", seniorsResult.error)
+        throw new Error(typeof seniorsResult.error === 'string' ? seniorsResult.error : 'Failed to load seniors')
+      }
+      if (volunteersResult.error) {
+        console.error("Volunteers error:", volunteersResult.error)
+        throw new Error(typeof volunteersResult.error === 'string' ? volunteersResult.error : 'Failed to load volunteers')
+      }
       if (unassignedResult.error) {
         console.error("Unassigned seniors error:", unassignedResult.error)
         throw new Error(typeof unassignedResult.error === 'string' ? unassignedResult.error : 'Failed to load unassigned seniors: ' + JSON.stringify(unassignedResult.error))
@@ -86,7 +102,15 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
       setSeniors(seniorsResult.data || [])
       setVolunteers(volunteersResult.data || [])
       setUnassignedSeniors(unassignedResult.data || [])
+
+      console.log("Data loaded successfully:", {
+        assignments: assignmentsResult.data?.length || 0,
+        seniors: seniorsResult.data?.length || 0,
+        volunteers: volunteersResult.data?.length || 0,
+        unassigned: unassignedResult.data?.length || 0
+      })
     } catch (error) {
+      console.error("Error in loadData:", error)
       setError("Failed to load data: " + (error as Error).message)
     } finally {
       setIsLoading(false)

@@ -580,6 +580,37 @@ export class SupabaseService {
   }
 
   /**
+   * Create a new delivery record
+   * @param deliveryData - Delivery data to create
+   * @returns Promise with created delivery data or error
+   */
+  static async createDelivery(deliveryData: {
+    senior_id: string
+    volunteer_id: string
+    delivery_date: string
+    status?: string
+    notes?: string
+  }) {
+    try {
+      const { data, error } = await supabase
+        .from("deliveries")
+        .insert({
+          ...deliveryData,
+          status: deliveryData.status || "pending",
+          notes: deliveryData.notes || ""
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      return { data, error: null }
+    } catch (error: any) {
+      console.error("Error creating delivery:", error)
+      return { data: null, error }
+    }
+  }
+
+  /**
    * Get deliveries with optional filtering by volunteer and month
    * @param volunteerId - Optional volunteer ID filter
    * @param month - Optional month filter (YYYY-MM format)

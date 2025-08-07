@@ -1,14 +1,17 @@
 "use client"
-import { useState } from "react"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useDelivery } from "@/contexts/delivery-context"
+import { useAuth } from "@/contexts/auth-context"
 import { SupabaseService } from "@/lib/supabase-service"
 import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
+import type { Senior } from "@/lib/supabase"
 
 interface SeniorProfileProps {
   seniorId: string
@@ -17,12 +20,22 @@ interface SeniorProfileProps {
 }
 
 export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProfileProps) {
-  const { seniors, deliveries, getDeliveryStatus, isLoading, refreshData } = useDelivery()
+  const { seniors, deliveries, isLoading, deliveryStatus, refreshData } = useDelivery()
+  const { user } = useAuth()
+  const [senior, setSenior] = useState<Senior | null>(null)
   const [deliveryNote, setDeliveryNote] = useState("")
   const [showNoteInput, setShowNoteInput] = useState(false)
 
-  const senior = seniors.find((s) => s.id === seniorId)
-  const deliveryStatus = getDeliveryStatus(seniorId)
+  // Find the senior and delivery status
+  const currentSenior = seniors.find((s) => s.id === seniorId)
+  const currentDeliveryStatus = deliveryStatus[seniorId] || { isDelivered: false, status: "pending" }
+
+  // Update senior state when seniors data changes
+  useEffect(() => {
+    if (currentSenior) {
+      setSenior(currentSenior)
+    }
+  }, [currentSenior])
 
   const handleCall = (phone: string | null) => {
     if (phone) {
@@ -35,12 +48,53 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
     window.open(`https://maps.google.com/?q=${encodedAddress}`, "_blank")
   }
 
-  const handleMarkDelivered = async () => {
-    // Find the delivery for this senior
-    const delivery = deliveries.find(d => d.senior_id === seniorId)
-    if (delivery) {
-      await SupabaseService.updateDelivery(delivery.id, { status: "delivered" })
-      await refreshData()
+  const handleMarkDelivered = async (checked: boolean | "indeterminate") => {
+    // Handle the checked value properly (boolean | "indeterminate")
+    if (typeof checked === "boolean") {
+      try {
+        // Find the delivery for this senior
+        const delivery = deliveries.find(d => d.senior_id === seniorId)
+        console.log("Senior:", seniorId, "Delivery found:", !!delivery, "Current status:", currentDeliveryStatus)
+        
+        if (delivery) {
+          const newStatus = checked ? "delivered" : "pending"
+          console.log(`Updating delivery ${delivery.id} to status: ${newStatus}`)
+          
+          const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
+          
+          if (result.success) {
+            console.log("Delivery updated successfully")
+            await refreshData()
+          } else {
+            console.error("Failed to update delivery:", result.error)
+          }
+        } else {
+          console.warn("No delivery record found for senior:", seniorId)
+          // Create a delivery record if it doesn't exist
+          console.log("Creating delivery record for senior:", seniorId)
+          
+          if (user?.id) {
+            const today = new Date().toISOString().split('T')[0]
+            const result = await SupabaseService.createDelivery({
+              senior_id: seniorId,
+              volunteer_id: user.id,
+              delivery_date: today,
+              status: checked ? "delivered" : "pending"
+            })
+            
+            if (result.data) {
+              console.log("Delivery record created successfully")
+              await refreshData()
+            } else {
+              console.error("Failed to create delivery record:", result.error)
+            }
+          } else {
+            console.error("No current user found")
+          }
+        }
+      } catch (error) {
+        console.error("Error updating delivery status:", error)
+      }
     }
   }
 
@@ -97,7 +151,7 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              {deliveryStatus.isDelivered ? (
+              {currentDeliveryStatus.isDelivered ? (
                 <Badge className="bg-green-100 text-green-800 border-green-200">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Delivered
@@ -244,18 +298,18 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-3">
               <Checkbox
-                checked={deliveryStatus.isDelivered}
+                checked={currentDeliveryStatus.isDelivered}
                 onCheckedChange={handleMarkDelivered}
                 disabled={false}
                 className="w-6 h-6"
               />
               <Label className="text-lg font-medium">
-                {deliveryStatus.isDelivered ? "Delivered" : "Mark as Delivered"}
+                {currentDeliveryStatus.isDelivered ? "Delivered" : "Mark as Delivered"}
               </Label>
 
             </div>
 
-            {!deliveryStatus.isDelivered && (
+            {!currentDeliveryStatus.isDelivered && (
               <div className="space-y-3">
             <Button
               variant="outline"

@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { useDelivery } from "@/contexts/delivery-context"
 import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
+import { useAuth } from "@/contexts/auth-context"
 
 interface DeliveryChecklistProps {
   onNavigate: (page: string) => void
@@ -21,6 +22,8 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     deliveryStatus,
     refreshData
   } = useDelivery()
+  
+  const { user } = useAuth()
 
   // Calculate counts from the data
   const completedCount = Object.values(deliveryStatus).filter(status => status.isDelivered).length
@@ -117,13 +120,51 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                       <Checkbox
                         checked={seniorDeliveryStatus.isDelivered}
                         onCheckedChange={async (checked) => {
-                          const delivery = deliveries.find(d => d.senior_id === senior.id)
-                          if (delivery) {
-                            const newStatus = checked ? "delivered" : "pending"
-                            await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
-                            await refreshData()
-                          } else {
-                            console.warn("No delivery record found for senior:", senior.id)
+                          // Handle the checked value properly (boolean | "indeterminate")
+                          if (typeof checked === "boolean") {
+                            try {
+                              const delivery = deliveries.find(d => d.senior_id === senior.id)
+                              console.log("Senior:", senior.id, "Delivery found:", !!delivery, "Current status:", seniorDeliveryStatus)
+                              
+                              if (delivery) {
+                                const newStatus = checked ? "delivered" : "pending"
+                                console.log(`Updating delivery ${delivery.id} to status: ${newStatus}`)
+                                
+                                const result = await SupabaseService.updateDelivery(delivery.id, { status: newStatus })
+                                
+                                if (result.success) {
+                                  console.log("Delivery updated successfully")
+                                  await refreshData()
+                                } else {
+                                  console.error("Failed to update delivery:", result.error)
+                                }
+                              } else {
+                                console.warn("No delivery record found for senior:", senior.id)
+                                // Create a delivery record if it doesn't exist
+                                console.log("Creating delivery record for senior:", senior.id)
+                                
+                                if (user?.id) {
+                                  const today = new Date().toISOString().split('T')[0]
+                                  const result = await SupabaseService.createDelivery({
+                                    senior_id: senior.id,
+                                    volunteer_id: user.id,
+                                    delivery_date: today,
+                                    status: checked ? "delivered" : "pending"
+                                  })
+                                  
+                                  if (result.data) {
+                                    console.log("Delivery record created successfully")
+                                    await refreshData()
+                                  } else {
+                                    console.error("Failed to create delivery record:", result.error)
+                                  }
+                                } else {
+                                  console.error("No current user found")
+                                }
+                              }
+                            } catch (error) {
+                              console.error("Error updating delivery status:", error)
+                            }
                           }
                         }}
                         className="w-6 h-6"

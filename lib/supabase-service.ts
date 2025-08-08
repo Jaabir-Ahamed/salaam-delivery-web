@@ -858,7 +858,9 @@ export class SupabaseService {
             id,
             name,
             address,
-            phone
+            phone,
+            building,
+            unit_apt
           ),
           volunteers (
             id,
@@ -885,7 +887,7 @@ export class SupabaseService {
       if (error) {
         console.error("getSeniorAssignments: Error with complex query:", error)
         
-        // Fallback: try simple query without joins
+        // Fallback: simple query without joins, then hydrate client-side
         console.log("getSeniorAssignments: Trying fallback simple query...")
         const { data: simpleData, error: simpleError } = await supabase
           .from("senior_assignments")
@@ -897,8 +899,39 @@ export class SupabaseService {
           throw simpleError
         }
 
-        console.log("getSeniorAssignments: Fallback query successful, returning", simpleData?.length || 0, "assignments")
-        return { data: simpleData || [], error: null }
+        // Hydrate related data client-side to avoid RLS join recursion
+        const seniorIds = Array.from(new Set((simpleData || []).map((a: any) => a.senior_id).filter(Boolean)))
+        const volunteerIds = Array.from(new Set((simpleData || []).map((a: any) => a.volunteer_id).filter(Boolean)))
+
+        let seniorsById: Record<string, any> = {}
+        let volunteersById: Record<string, any> = {}
+
+        if (seniorIds.length > 0) {
+          const { data: seniorsRows } = await supabase
+            .from("seniors")
+            .select("id,name,address,building,unit_apt,phone")
+            .in("id", seniorIds)
+          ;
+          (seniorsRows || []).forEach((s: any) => { seniorsById[s.id] = s })
+        }
+
+        if (volunteerIds.length > 0) {
+          const { data: volunteerRows } = await supabase
+            .from("volunteers")
+            .select("id,name,email")
+            .in("id", volunteerIds)
+          ;
+          (volunteerRows || []).forEach((v: any) => { volunteersById[v.id] = v })
+        }
+
+        const hydrated = (simpleData || []).map((a: any) => ({
+          ...a,
+          seniors: seniorsById[a.senior_id] || null,
+          volunteers: volunteersById[a.volunteer_id] || null,
+        }))
+
+        console.log("getSeniorAssignments: Fallback hydrated result count:", hydrated.length)
+        return { data: hydrated, error: null }
       }
 
       console.log("getSeniorAssignments: Complex query successful, returning", data?.length || 0, "assignments")

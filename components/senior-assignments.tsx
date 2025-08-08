@@ -93,7 +93,8 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
 
       if (volunteersResult.error) {
         console.error("Volunteers error:", volunteersResult.error)
-        throw new Error(typeof volunteersResult.error === 'string' ? volunteersResult.error : 'Failed to load volunteers')
+        // Don't block the page if volunteers fail; continue with empty list
+        console.warn("Volunteers failed to load; continuing with empty list")
       }
 
       console.log("4. Loading unassigned seniors...")

@@ -143,7 +143,6 @@ export interface Volunteer {
   address: string | null
   role: "volunteer" | "admin"
   speaks_languages: string[]
-  languages: string[]
   availability: string[]
   vehicle_type: "car" | "truck" | "van" | "none"
   vehicle_capacity: number

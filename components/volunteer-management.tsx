@@ -187,7 +187,7 @@ export function VolunteerManagement({ onDataChange }: VolunteerManagementProps) 
       email: volunteer.email,
       phone: volunteer.phone || "",
       address: volunteer.address || "",
-      languages: volunteer.languages || [],
+              languages: volunteer.speaks_languages || [],
       availability: volunteer.availability || [],
       vehicle_type: volunteer.vehicle_type,
       vehicle_capacity: (volunteer.vehicle_capacity ?? '').toString(),
@@ -549,9 +549,9 @@ export function VolunteerManagement({ onDataChange }: VolunteerManagementProps) 
                         )}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {volunteer.languages && volunteer.languages.length > 0 && (
-                          <Badge variant="secondary" className="text-xs">Languages: {volunteer.languages.join(", ")}</Badge>
-                        )}
+                                        {volunteer.speaks_languages && volunteer.speaks_languages.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">Languages: {volunteer.speaks_languages.join(", ")}</Badge>
+                )}
                         {volunteer.availability && volunteer.availability.length > 0 && (
                           <Badge variant="secondary" className="text-xs">Available: {volunteer.availability.join(", ")}</Badge>
                         )}

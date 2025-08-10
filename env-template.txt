@@ -5,4 +5,4 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
 # Optional: Production site URL (for auth redirects)
-# NEXT_PUBLIC_SITE_URL=https://your-production-domain.com 
+    # NEXT_PUBLIC_SITE_URL=https://your-production-domain.com 

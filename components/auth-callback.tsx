@@ -62,42 +62,23 @@ export function AuthCallback({ onAuthSuccess, onAuthError }: AuthCallbackProps) 
       // Check if volunteer record exists
       let volunteer = await SupabaseService.getCurrentUser()
 
-      // If no volunteer record exists, create one
-      if (!volunteer && user.user_metadata) {
-        try {
-          const volunteerData = {
-            id: user.id,
-            email: user.email!,
-            name: user.user_metadata.name || user.user_metadata.full_name || "Unknown",
-            phone: user.user_metadata.phone,
-            role: user.user_metadata.role || "volunteer",
-            languages: user.user_metadata.languages || ["english"],
-            active: true,
-          }
-
-          const { error: volunteerError } = await getSupabase()
-            .from("volunteers")
-            .insert([volunteerData])
-
-          if (volunteerError) {
-            throw volunteerError
-          }
-
-          // Fetch the newly created volunteer record
-          volunteer = await SupabaseService.getCurrentUser()
-        } catch (createError) {
-          console.error("Error creating volunteer record:", createError)
-          setStatus("error")
-          setMessage("Account created but profile setup failed. Please contact support.")
-          onAuthError("Profile setup failed")
-          return
-        }
-      }
-
+      // If no volunteer record exists, redirect to profile completion
       if (!volunteer) {
-        setStatus("error")
-        setMessage("User profile not found. Please contact support.")
-        onAuthError("Profile not found")
+        setStatus("success")
+        setMessage("Account created successfully! Please complete your profile.")
+        
+        // Wait a moment then redirect to profile completion
+        setTimeout(() => {
+          // Store user info in session storage for profile completion
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('pendingUser', JSON.stringify({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.name || user.user_metadata?.full_name || "Unknown"
+            }))
+          }
+          onAuthSuccess({ id: user.id, email: user.email, needsProfile: true })
+        }, 2000)
         return
       }
 

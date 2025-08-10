@@ -360,7 +360,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                           <SelectValue placeholder="Select a volunteer" />
                         </SelectTrigger>
                         <SelectContent>
-                          {volunteers.filter((v: any) => v.active).map((volunteer: any) => (
+                          {volunteers.filter((v: any) => v.active && v.role === "volunteer").map((volunteer: any) => (
                             <SelectItem key={volunteer.id} value={volunteer.id}>
                               {volunteer.name} ({volunteer.email})
                             </SelectItem>
@@ -465,7 +465,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                           <SelectValue placeholder="Select a volunteer" />
                         </SelectTrigger>
                         <SelectContent>
-                          {volunteers.filter(v => v.active).map((volunteer) => (
+                          {volunteers.filter(v => v.active && v.role === "volunteer").map((volunteer) => (
                             <SelectItem key={volunteer.id} value={volunteer.id}>
                               {volunteer.name} ({volunteer.email})
                             </SelectItem>
@@ -563,7 +563,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                 <div className="min-w-0 flex-1">
                   <p className="text-xs md:text-sm font-medium text-gray-600 truncate">Active Volunteers</p>
                   <p className="text-xl md:text-2xl font-bold text-purple-600">
-                    {volunteers.filter(v => v.active).length}
+                    {volunteers.filter(v => v.active && v.role === "volunteer").length}
                   </p>
                 </div>
                 <Users className="w-6 h-6 md:w-8 md:h-8 text-purple-600 flex-shrink-0" />
@@ -607,7 +607,7 @@ export function SeniorAssignments({ onNavigate }: SeniorAssignmentsProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Volunteers</SelectItem>
-                    {volunteers.filter(v => v.active).map((volunteer) => (
+                    {volunteers.filter(v => v.active && v.role === "volunteer").map((volunteer) => (
                       <SelectItem key={volunteer.id} value={volunteer.id}>
                         {volunteer.name}
                       </SelectItem>

@@ -73,7 +73,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
 
       setStats({
         totalSeniors: seniorsResult.data?.length || 0,
-        activeVolunteers: volunteersResult.data?.filter((v: any) => v.active).length || 0,
+        activeVolunteers: volunteersResult.data?.filter((v: any) => v.active && v.role === "volunteer").length || 0,
         monthlyDeliveries: monthlyDeliveries.length,
         pendingDeliveries: pending,
         completedDeliveries: completed,

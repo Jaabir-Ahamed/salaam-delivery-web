@@ -14,8 +14,8 @@ interface RouteMapProps {
 export function RouteMap({ onNavigate, onSelectSenior }: RouteMapProps) {
   const { seniors, deliveries, getDeliveryStatus, isLoading } = useDelivery()
 
-  const routeSeniorIds = new Set(deliveries.map(d => d.senior_id))
-  const routeSeniors = seniors.filter(s => routeSeniorIds.has(s.id))
+  // Show all assigned seniors, not just those with delivery records
+  const routeSeniors = seniors
 
   const handleDirections = (address: string) => {
     const encodedAddress = encodeURIComponent(address)
@@ -45,7 +45,7 @@ export function RouteMap({ onNavigate, onSelectSenior }: RouteMapProps) {
     )
   }
 
-  const completedCount = deliveries.filter(d => d.status === "delivered" || d.status === "family_confirmed").length
+  const completedCount = routeSeniors.filter(s => getDeliveryStatus(s.id).isDelivered).length
   const totalStops = routeSeniors.length
 
   return (

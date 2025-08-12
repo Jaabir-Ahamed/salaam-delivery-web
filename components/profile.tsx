@@ -11,6 +11,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/contexts/auth-context"
 import { SupabaseService } from "@/lib/supabase-service"
+// Lazy import to avoid build-time initialization
+let supabase: any = null
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = require("@/lib/supabase").supabase
+  }
+  return supabase
+}
 import { ArrowLeft, Camera, Save, Mail, Lock, Loader2, User, Shield, LogOut, CheckCircle } from "lucide-react"
 
 interface ProfileProps {
@@ -98,8 +106,13 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsLoading(true)
     try {
-      // Email update not implemented yet
-      showMessage("Email update not implemented yet", "error")
+      const { error } = await getSupabase().auth.updateUser({
+        email: formData.newEmail
+      })
+
+      if (error) throw error
+
+      showMessage("Verification email sent! Please check your inbox to confirm the email change.", "success")
       setFormData((prev) => ({ ...prev, newEmail: "" }))
     } catch (error: any) {
       showMessage(error.message || "Error sending verification email", "error")
@@ -131,9 +144,13 @@ export function Profile({ onNavigate }: ProfileProps) {
 
     setIsLoading(true)
     try {
-      // Password update not implemented yet
-      showMessage("Password update not implemented yet", "error")
-      showMessage("Password changed successfully!", "success")
+      const result = await SupabaseService.updatePassword(formData.currentPassword, formData.newPassword)
+      
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to change password")
+      }
+
+      showMessage("Password changed successfully! Check your email for confirmation.", "success")
       setFormData((prev) => ({
         ...prev,
         currentPassword: "",

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase"
+import { getEnvironmentConfig } from "./env-config"
 import type { Senior, Volunteer, Delivery, SeniorAssignment, MonthlyStats } from "./supabase"
 
 /**
@@ -104,8 +105,9 @@ export class SupabaseService {
    */
   static async resetPassword(email: string) {
     try {
+      const config = getEnvironmentConfig()
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth-callback`,
+        redirectTo: `${config.siteUrl}/auth-callback`,
       })
 
       if (error) throw error
@@ -142,10 +144,11 @@ export class SupabaseService {
       if (updateError) throw updateError
 
       // Send email notification about password change
+      const config = getEnvironmentConfig()
       const { error: emailError } = await supabase.auth.resetPasswordForEmail(
         user?.email || '',
         {
-          redirectTo: `${window.location.origin}/auth-callback`,
+          redirectTo: `${config.siteUrl}/auth-callback`,
         }
       )
 

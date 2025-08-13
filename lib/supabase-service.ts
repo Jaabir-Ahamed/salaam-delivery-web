@@ -105,6 +105,11 @@ export class SupabaseService {
    */
   static async resetPassword(email: string) {
     try {
+      // Check if Supabase is properly initialized
+      if (!supabase) {
+        throw new Error("Supabase client not initialized. Please check your environment variables.")
+      }
+
       const config = getEnvironmentConfig()
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${config.siteUrl}/auth-callback`,
@@ -126,9 +131,21 @@ export class SupabaseService {
    */
   static async updatePassword(currentPassword: string, newPassword: string) {
     try {
+      // Check if Supabase is properly initialized
+      if (!supabase) {
+        throw new Error("Supabase client not initialized. Please check your environment variables.")
+      }
+
+      // Get current user first
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !currentUser?.email) {
+        throw new Error("Unable to get current user information")
+      }
+
       // First, verify the current password by attempting to sign in
       const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
-        email: (await supabase.auth.getUser()).data.user?.email || '',
+        email: currentUser.email,
         password: currentPassword
       })
 
@@ -144,15 +161,19 @@ export class SupabaseService {
       if (updateError) throw updateError
 
       // Send email notification about password change
-      const config = getEnvironmentConfig()
-      const { error: emailError } = await supabase.auth.resetPasswordForEmail(
-        user?.email || '',
-        {
-          redirectTo: `${config.siteUrl}/auth-callback`,
-        }
-      )
+      try {
+        const config = getEnvironmentConfig()
+        const { error: emailError } = await supabase.auth.resetPasswordForEmail(
+          user?.email || currentUser.email,
+          {
+            redirectTo: `${config.siteUrl}/auth-callback`,
+          }
+        )
 
-      if (emailError) {
+        if (emailError) {
+          console.warn("Failed to send password change notification email:", emailError)
+        }
+      } catch (emailError) {
         console.warn("Failed to send password change notification email:", emailError)
       }
 

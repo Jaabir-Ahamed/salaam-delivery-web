@@ -30,6 +30,7 @@ export const supabase = (() => {
           signOut: async () => ({ error: null }),
           resetPasswordForEmail: async () => ({ error: null }),
           getUser: async () => ({ data: { user: null }, error: null }),
+          updateUser: async () => ({ data: null, error: null }),
         },
         from: () => ({
           select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }) }) }),
@@ -59,6 +60,10 @@ export const supabase = (() => {
         signOut: async () => ({ error: null }),
         resetPasswordForEmail: async () => ({ error: null }),
         getUser: async () => ({ data: { user: null }, error: null }),
+        updateUser: async () => ({ 
+          data: null, 
+          error: { message: "Supabase not configured. Please set environment variables." } 
+        }),
       },
       from: () => ({
         select: () => ({ 

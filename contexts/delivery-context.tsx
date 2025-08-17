@@ -114,14 +114,19 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         seniorsError = result.error
       } else {
         // Volunteers see only their assigned seniors
-        const assignmentsResult = await SupabaseService.getSeniorAssignments({ 
-          volunteerId: user.id, 
-          active: true 
-        })
+        console.log("Loading assigned seniors for volunteer:", user.id)
+        const assignmentsResult = await SupabaseService.getSeniorAssignments()
         
         if (assignmentsResult.data) {
+          // Filter for active assignments for this volunteer (same as dashboard)
+          const volunteerAssignments = assignmentsResult.data.filter((assignment: any) => 
+            assignment.volunteer_id === user.id && assignment.status === "active"
+          )
+          
+          console.log("Volunteer assignments found:", volunteerAssignments.length)
+          
           // Extract senior IDs from assignments
-          const seniorIds = assignmentsResult.data.map((assignment: any) => assignment.senior_id)
+          const seniorIds = volunteerAssignments.map((assignment: any) => assignment.senior_id)
           
           if (seniorIds.length > 0) {
             // Get senior details for assigned seniors
@@ -130,9 +135,11 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
               seniorsData = seniorsResult.data.filter((senior: any) => 
                 seniorIds.includes(senior.id)
               )
+              console.log("Assigned seniors found:", seniorsData.length)
             }
           } else {
             seniorsData = []
+            console.log("No assigned seniors found")
           }
         }
         seniorsError = assignmentsResult.error
@@ -170,6 +177,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       // Update delivery status based on loaded deliveries
       const newDeliveryStatus: Record<string, DeliveryStatus> = {}
       if (deliveriesData) {
+        console.log("Processing deliveries:", deliveriesData.length)
         deliveriesData.forEach((delivery: any) => {
           if (delivery.senior_id) {
             newDeliveryStatus[delivery.senior_id] = {
@@ -192,7 +200,20 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         }
       })
       
-      console.log("Delivery status updated:", newDeliveryStatus)
+      const completedCount = Object.values(newDeliveryStatus).filter(status => status.isDelivered).length
+      const totalCount = seniorsData?.length || 0
+      
+      console.log("Delivery Context Debug:", {
+        seniorsCount: seniorsData?.length || 0,
+        deliveriesCount: deliveriesData?.length || 0,
+        deliveryStatusCount: Object.keys(newDeliveryStatus).length,
+        completedCount,
+        totalCount,
+        progressPercentage: totalCount > 0 ? (completedCount / totalCount) * 100 : 0,
+        seniors: seniorsData?.map((s: any) => ({ id: s.id, name: s.name })) || [],
+        deliveryStatus: Object.entries(newDeliveryStatus).map(([id, status]) => ({ id, ...status }))
+      })
+      
       setDeliveryStatus(newDeliveryStatus)
 
     } catch (error) {

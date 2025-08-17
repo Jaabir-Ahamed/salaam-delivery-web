@@ -633,12 +633,12 @@ export class SupabaseService {
   }
 
   /**
-   * Update delivery status and notes
+   * Update an existing delivery record
    * @param deliveryId - Delivery's unique identifier
-   * @param updates - Object containing status and notes to update
+   * @param updates - Object containing fields to update
    * @returns Promise with success status or error
    */
-  static async updateDelivery(deliveryId: string, updates: { status?: string; notes?: string }) {
+  static async updateDelivery(deliveryId: string, updates: Partial<Delivery>) {
     try {
       const { error } = await supabase
         .from("deliveries")
@@ -646,6 +646,35 @@ export class SupabaseService {
         .eq("id", deliveryId)
 
       if (error) throw error
+
+      // If delivery is marked as delivered, also update the senior assignment status
+      if (updates.status === "delivered" || updates.status === "family_confirmed") {
+        // Get the delivery to find the senior_id
+        const { data: deliveryData, error: deliveryError } = await supabase
+          .from("deliveries")
+          .select("senior_id, volunteer_id")
+          .eq("id", deliveryId)
+          .single()
+
+        if (!deliveryError && deliveryData) {
+          // Update the corresponding senior assignment to completed
+          const { error: assignmentError } = await supabase
+            .from("senior_assignments")
+            .update({ 
+              status: "completed",
+              updated_at: new Date().toISOString()
+            })
+            .eq("senior_id", deliveryData.senior_id)
+            .eq("volunteer_id", deliveryData.volunteer_id)
+            .eq("status", "active")
+
+          if (assignmentError) {
+            console.warn("Failed to update senior assignment status:", assignmentError)
+            // Don't throw error here - delivery was updated successfully
+          }
+        }
+      }
+
       return { success: true, error: null }
     } catch (error: any) {
       console.error("Error updating delivery:", error)

@@ -21,6 +21,7 @@ export class SupabaseService {
    */
   static async signUp(email: string, password: string, metadata: any) {
     try {
+      // First, just create the auth user without trying to create volunteer profile
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -31,26 +32,31 @@ export class SupabaseService {
 
       if (error) throw error
 
-      // If signup successful, create volunteer profile
+      // If signup successful, try to create volunteer profile
       if (data.user) {
-        const volunteerData = {
-          id: data.user.id,
-          email: email,
-          name: metadata.name,
-          phone: metadata.phone,
-          role: metadata.role || "volunteer",
-          languages: metadata.languages || ["english"],
-          active: true,
-        }
+        try {
+          const volunteerData = {
+            id: data.user.id,
+            email: email,
+            name: metadata.name,
+            phone: metadata.phone || null,
+            role: metadata.role || "volunteer",
+            speaks_languages: metadata.languages || ["english"],
+            active: true,
+          }
 
-        const { error: volunteerError } = await supabase
-          .from("volunteers")
-          .insert([volunteerData])
+          const { error: volunteerError } = await supabase
+            .from("volunteers")
+            .insert([volunteerData])
 
-        if (volunteerError) {
+          if (volunteerError) {
+            console.error("Error creating volunteer profile:", volunteerError)
+            // Don't throw error here - user account is created successfully
+            // Volunteer profile can be created later when user confirms email
+          }
+        } catch (volunteerError: any) {
           console.error("Error creating volunteer profile:", volunteerError)
-          // Note: User account is created but volunteer profile failed
-          // This should be handled by the calling component
+          // Don't throw error here - user account is created successfully
         }
       }
 

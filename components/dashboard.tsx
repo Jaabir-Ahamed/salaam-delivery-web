@@ -61,23 +61,37 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       const now = new Date()
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
-      // Load today's deliveries for volunteers only
+      // Load assigned seniors and deliveries for volunteers only
       let todayCompleted = 0
       let todayTotal = 0
 
       if (user?.id && user?.role === "volunteer") {
-        console.log("Loading today's deliveries for volunteer:", user.id)
-        const { data: todayDeliveries, error } = await SupabaseService.getTodaysDeliveries(user.id)
-        if (!error && todayDeliveries) {
-          todayTotal = todayDeliveries.length
-          todayCompleted = todayDeliveries.filter((d: any) => 
-            d.status === "delivered" || d.status === "family_confirmed"
-          ).length
-        } else if (error) {
-          console.warn("Error loading today's deliveries:", error)
+        console.log("Loading assigned seniors for volunteer:", user.id)
+        
+        // Get assigned seniors (same as delivery checklist)
+        const { data: assignedSeniors, error: seniorsError } = await SupabaseService.getSeniorAssignments()
+        if (!seniorsError && assignedSeniors) {
+          // Filter for active assignments for this volunteer
+          const volunteerAssignments = assignedSeniors.filter((assignment: any) => 
+            assignment.volunteer_id === user.id && assignment.status === "active"
+          )
+          todayTotal = volunteerAssignments.length
+          
+          // Get delivery status for each assigned senior
+          const { data: deliveries, error: deliveriesError } = await SupabaseService.getDeliveries()
+          if (!deliveriesError && deliveries) {
+            todayCompleted = volunteerAssignments.filter((assignment: any) => {
+              const delivery = deliveries.find((d: any) => 
+                d.senior_id === assignment.senior_id && d.volunteer_id === user.id
+              )
+              return delivery && (delivery.status === "delivered" || delivery.status === "family_confirmed")
+            }).length
+          }
+        } else if (seniorsError) {
+          console.warn("Error loading assigned seniors:", seniorsError)
         }
       } else {
-        console.log("Skipping today's deliveries for user role:", user?.role)
+        console.log("Skipping assigned seniors for user role:", user?.role)
       }
 
       // Load monthly statistics

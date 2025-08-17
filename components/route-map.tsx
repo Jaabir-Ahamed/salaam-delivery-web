@@ -47,6 +47,10 @@ export function RouteMap({ onNavigate, onSelectSenior }: RouteMapProps) {
 
   const completedCount = routeSeniors.filter(s => getDeliveryStatus(s.id).isDelivered).length
   const totalStops = routeSeniors.length
+  
+  // Calculate estimated time and distance based on actual stops
+  const estimatedMinutes = totalStops > 0 ? Math.max(15, totalStops * 10) : 0 // 10 min per stop, minimum 15 min
+  const estimatedMiles = totalStops > 0 ? Math.max(2, totalStops * 3) : 0 // 3 miles per stop, minimum 2 miles
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,11 +101,11 @@ export function RouteMap({ onNavigate, onSelectSenior }: RouteMapProps) {
                 <p className="text-xs text-gray-600 mt-1">Completed</p>
               </div>
               <div className="bg-orange-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-orange-600">~45</p>
+                <p className="text-2xl font-bold text-orange-600">~{estimatedMinutes}</p>
                 <p className="text-xs text-gray-600 mt-1">Minutes</p>
               </div>
               <div className="bg-purple-50 rounded-lg p-3">
-                <p className="text-2xl font-bold text-purple-600">~12</p>
+                <p className="text-2xl font-bold text-purple-600">~{estimatedMiles}</p>
                 <p className="text-xs text-gray-600 mt-1">Miles</p>
               </div>
             </div>

@@ -842,6 +842,31 @@ export class SupabaseService {
         .single()
 
       if (error) throw error
+
+      // Create corresponding delivery record
+      if (data) {
+        try {
+          const deliveryData = {
+            senior_id: data.senior_id,
+            volunteer_id: data.volunteer_id,
+            delivery_date: data.assignment_date,
+            status: "pending"
+          }
+
+          const { error: deliveryError } = await supabase
+            .from("deliveries")
+            .insert([deliveryData])
+
+          if (deliveryError) {
+            console.warn("Failed to create delivery record for assignment:", deliveryError)
+            // Don't throw error - assignment was created successfully
+          }
+        } catch (deliveryError: any) {
+          console.warn("Error creating delivery record:", deliveryError)
+          // Don't throw error - assignment was created successfully
+        }
+      }
+
       return { data, error: null }
     } catch (error: any) {
       console.error("Error creating senior assignment:", error)

@@ -31,6 +31,18 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
   const totalCount = seniors.length
   const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
 
+  // Debug logging
+  console.log("Delivery Checklist Debug:", {
+    seniorsCount: seniors.length,
+    deliveriesCount: deliveries.length,
+    deliveryStatusCount: Object.keys(deliveryStatus).length,
+    completedCount,
+    totalCount,
+    progressPercentage,
+    seniors: seniors.map(s => ({ id: s.id, name: s.name })),
+    deliveryStatus: Object.entries(deliveryStatus).map(([id, status]) => ({ id, ...status }))
+  })
+
   const handleCall = (phone: string | null) => {
     if (phone) {
     window.open(`tel:${phone}`, "_self")
@@ -76,7 +88,7 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
               </Button>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">Delivery Checklist</h1>
-                <p className="text-sm text-gray-600">December 2024</p>
+                <p className="text-sm text-gray-600">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
               </div>
             </div>
             <div className="text-right">

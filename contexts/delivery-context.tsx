@@ -145,12 +145,15 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         setSeniors(seniorsData || [])
       }
 
-      // Load today's deliveries for current volunteer (only if user has a volunteer ID and is not admin)
+      // Load all deliveries for current volunteer (not just today's)
       let deliveriesData = null
       let deliveriesError = null
       if (user.id && !isAdmin) { // Added !isAdmin check
-        const result = await SupabaseService.getTodaysDeliveries(user.id)
-        deliveriesData = result.data
+        const result = await SupabaseService.getDeliveries()
+        if (result.data) {
+          // Filter deliveries for this volunteer only
+          deliveriesData = result.data.filter((delivery: any) => delivery.volunteer_id === user.id)
+        }
         deliveriesError = result.error
       } else if (user.id && isAdmin) {
         // For admins, we might want to show all deliveries or just set empty array

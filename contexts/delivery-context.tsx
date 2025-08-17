@@ -176,10 +176,17 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
 
       // Update delivery status based on loaded deliveries
       const newDeliveryStatus: Record<string, DeliveryStatus> = {}
+      
+      // Only process deliveries for seniors that are actually assigned to this volunteer
+      const assignedSeniorIds = seniorsData?.map((senior: any) => senior.id) || []
+      
       if (deliveriesData) {
         console.log("Processing deliveries:", deliveriesData.length)
+        console.log("Assigned senior IDs:", assignedSeniorIds)
+        
         deliveriesData.forEach((delivery: any) => {
-          if (delivery.senior_id) {
+          // Only count deliveries for seniors that are assigned to this volunteer
+          if (delivery.senior_id && assignedSeniorIds.includes(delivery.senior_id)) {
             newDeliveryStatus[delivery.senior_id] = {
               isDelivered: delivery.status === "delivered" || delivery.status === "family_confirmed",
               status: delivery.status || "pending",
@@ -189,7 +196,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
         })
       }
       
-      // Initialize delivery status for seniors without delivery records
+      // Initialize delivery status for assigned seniors without delivery records
       seniorsData?.forEach((senior: any) => {
         if (!newDeliveryStatus[senior.id]) {
           newDeliveryStatus[senior.id] = {
@@ -206,6 +213,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       console.log("Delivery Context Debug:", {
         seniorsCount: seniorsData?.length || 0,
         deliveriesCount: deliveriesData?.length || 0,
+        assignedSeniorIds,
         deliveryStatusCount: Object.keys(newDeliveryStatus).length,
         completedCount,
         totalCount,

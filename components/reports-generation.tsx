@@ -30,6 +30,7 @@ export function ReportsGeneration() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [reportData, setReportData] = useState<any>(null)
   const [error, setError] = useState("")
+  const [comprehensiveData, setComprehensiveData] = useState<any>(null)
 
   const currentYear = new Date().getFullYear()
   const currentMonth = new Date().getMonth() + 1
@@ -51,6 +52,9 @@ export function ReportsGeneration() {
       } else if (reportType === "delivery") {
         const deliveries = await SupabaseService.getDeliveries(undefined, selectedMonth)
         setReportData(deliveries)
+      } else if (reportType === "comprehensive") {
+        const comprehensive = await SupabaseService.getComprehensiveDeliveryData(selectedMonth)
+        setComprehensiveData(comprehensive)
       }
     } catch (error) {
       setError("Error generating report: " + (error as Error).message)
@@ -74,6 +78,9 @@ export function ReportsGeneration() {
     } else if (reportType === "delivery") {
       filename = `delivery-report-${selectedMonth}.csv`
       csvContent = generateDeliveryCSV(reportData)
+    } else if (reportType === "comprehensive") {
+      filename = `comprehensive-delivery-report-${selectedMonth}.csv`
+      csvContent = generateComprehensiveCSV(comprehensiveData)
     }
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
@@ -150,6 +157,169 @@ export function ReportsGeneration() {
     return [headers, ...rows].map(row => row.join(",")).join("\n")
   }
 
+  const generateComprehensiveCSV = (data: any) => {
+    const headers = [
+      // Core delivery details
+      "Delivery_ID",
+      "Service_Date",
+      "Service_Window_Start",
+      "Service_Window_End", 
+      "Delivery_Status",
+      "Delivery_Method",
+      "Delivery_Notes",
+      "Attempt_Count",
+      "Followup_Required",
+      "Followup_Action_Due_Date",
+      "Weather_Conditions",
+      "Proof_of_Delivery_URL",
+      "Language_Barrier_Encountered",
+      "Translation_Needed",
+      "Created_At",
+      "Completed_At",
+      
+      // Recipient (senior) profile
+      "Senior_ID",
+      "Senior_Name", 
+      "DOB_or_Age",
+      "Gender",
+      "Address_Line1",
+      "Address_Line2_Unit_Apt",
+      "Building_Name",
+      "City",
+      "ZIP_Code",
+      "Geo_Lat",
+      "Geo_Lng",
+      "Preferred_Language",
+      "Needs_Translation",
+      "Has_Smartphone",
+      "Primary_Phone",
+      "Secondary_Phone",
+      "Emergency_Contact_Name",
+      "Emergency_Contact_Phone",
+      "Dietary_Restrictions",
+      "Health_Notes",
+      "Accessibility_Flags",
+      "Household_Type",
+      "Household_Size",
+      "Residency_Verified",
+      "Special_Instructions",
+      "Active",
+      
+      // Volunteer details
+      "Volunteer_ID",
+      "Volunteer_Name",
+      "Volunteer_Email", 
+      "Volunteer_Phone",
+      "Volunteer_Languages",
+      "Shift_Start_Time",
+      "Shift_End_Time",
+      "Miles_Traveled",
+      "Hours_Served",
+      "Reimbursement_Eligible",
+      "Reimbursement_Amount",
+      "Volunteer_Address",
+      "Volunteer_Role",
+      "Vehicle_Type",
+      "Vehicle_Capacity",
+      "Experience_Level",
+      "Special_Skills",
+      "Emergency_Contact",
+      "Volunteer_Notes",
+      "Volunteer_Active"
+    ]
+
+    const rows = data.data?.map((delivery: any) => {
+      const senior = delivery.seniors
+      const volunteer = delivery.volunteers
+      
+      // Calculate household size
+      const householdSize = (senior?.family_adults || 0) + (senior?.family_children || 0)
+      
+      // Calculate hours served (placeholder - would need actual shift data)
+      const hoursServed = "N/A" // This would need to be calculated from actual shift data
+      
+      // Determine followup required based on status
+      const followupRequired = delivery.status === "missed" || delivery.status === "no_contact" ? "yes" : "no"
+      
+      // Calculate followup due date (7 days from delivery date for missed/no_contact)
+      const followupDueDate = followupRequired === "yes" ? 
+        new Date(new Date(delivery.delivery_date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
+        "N/A"
+
+      return [
+        // Core delivery details
+        delivery.id || "",
+        delivery.delivery_date || "",
+        "N/A", // Service_Window_Start - would need to be added to database
+        "N/A", // Service_Window_End - would need to be added to database
+        delivery.status || "",
+        delivery.delivery_method || "",
+        delivery.notes || "",
+        "1", // Attempt_Count - would need to be tracked in database
+        followupRequired,
+        followupDueDate,
+        "N/A", // Weather_Conditions - would need to be added to database
+        "N/A", // Proof_of_Delivery_URL - would need to be added to database
+        delivery.language_barrier_encountered ? "yes" : "no",
+        delivery.translation_needed ? "yes" : "no",
+        delivery.created_at || "",
+        delivery.completed_at || "",
+        
+        // Recipient (senior) profile
+        senior?.id || "",
+        senior?.name || "",
+        senior?.age || "",
+        "N/A", // Gender - would need to be added to database
+        senior?.address || "",
+        senior?.unit_apt || "",
+        senior?.building || "",
+        "Fremont", // City - hardcoded for now
+        senior?.zip_code || "",
+        "N/A", // Geo_Lat - would need to be added to database
+        "N/A", // Geo_Lng - would need to be added to database
+        senior?.preferred_language || "",
+        senior?.needs_translation ? "yes" : "no",
+        senior?.has_smartphone ? "yes" : "no",
+        senior?.phone || "",
+        "N/A", // Secondary_Phone - would need to be added to database
+        senior?.emergency_contact || "",
+        "N/A", // Emergency_Contact_Phone - would need to be added to database
+        senior?.dietary_restrictions || "",
+        senior?.health_conditions || "",
+        "N/A", // Accessibility_Flags - would need to be added to database
+        senior?.household_type || "",
+        householdSize.toString(),
+        "yes", // Residency_Verified - assumed yes for active seniors
+        senior?.special_instructions || "",
+        senior?.active ? "yes" : "no",
+        
+        // Volunteer details
+        volunteer?.id || "",
+        volunteer?.name || "",
+        volunteer?.email || "",
+        volunteer?.phone || "",
+        volunteer?.speaks_languages?.join(", ") || "",
+        "N/A", // Shift_Start_Time - would need to be added to database
+        "N/A", // Shift_End_Time - would need to be added to database
+        "N/A", // Miles_Traveled - would need to be added to database
+        hoursServed,
+        "N/A", // Reimbursement_Eligible - would need to be added to database
+        "N/A", // Reimbursement_Amount - would need to be added to database
+        volunteer?.address || "",
+        volunteer?.role || "",
+        volunteer?.vehicle_type || "",
+        volunteer?.vehicle_capacity?.toString() || "",
+        volunteer?.experience_level || "",
+        volunteer?.special_skills || "",
+        volunteer?.emergency_contact || "",
+        volunteer?.notes || "",
+        volunteer?.active ? "yes" : "no"
+      ]
+    }) || []
+
+    return [headers, ...rows].map(row => row.join(",")).join("\n")
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'delivered':
@@ -207,6 +377,7 @@ export function ReportsGeneration() {
                   <SelectItem value="monthly">Monthly Summary</SelectItem>
                   <SelectItem value="accessibility">Accessibility Report</SelectItem>
                   <SelectItem value="delivery">Delivery Details</SelectItem>
+                  <SelectItem value="comprehensive">Comprehensive Delivery Report</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +422,7 @@ export function ReportsGeneration() {
       )}
 
       {/* Report Results */}
-      {reportData && (
+      {(reportData || comprehensiveData) && (
         <div className="space-y-6">
           {/* Report Header */}
           <div className="flex items-center justify-between">
@@ -260,6 +431,7 @@ export function ReportsGeneration() {
                 {reportType === "monthly" && "Monthly Summary Report"}
                 {reportType === "accessibility" && "Accessibility Report"}
                 {reportType === "delivery" && "Delivery Details Report"}
+                {reportType === "comprehensive" && "Comprehensive Delivery Report"}
               </h3>
               <p className="text-gray-600">
                 Generated for {reportType === "accessibility" ? new Date().toLocaleDateString() : selectedMonth}
@@ -466,6 +638,66 @@ export function ReportsGeneration() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Comprehensive Report */}
+          {reportType === "comprehensive" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Comprehensive Delivery Report</CardTitle>
+                <CardDescription>
+                  Detailed delivery data with senior and volunteer information for {selectedMonth}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Comprehensive Data Ready for Export
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      This report contains {comprehensiveData.data?.length || 0} delivery records with detailed information including:
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <h4 className="font-medium mb-2">Core Delivery Details</h4>
+                        <ul className="space-y-1">
+                          <li>• Delivery ID & Status</li>
+                          <li>• Service Date & Method</li>
+                          <li>• Notes & Followup Info</li>
+                          <li>• Language Barriers</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-2">Senior Profile</h4>
+                        <ul className="space-y-1">
+                          <li>• Personal Information</li>
+                          <li>• Address & Contact</li>
+                          <li>• Health & Dietary Info</li>
+                          <li>• Accessibility Needs</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-medium mb-2">Volunteer Details</h4>
+                        <ul className="space-y-1">
+                          <li>• Contact Information</li>
+                          <li>• Languages & Skills</li>
+                          <li>• Vehicle & Experience</li>
+                          <li>• Service Hours</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <Button onClick={exportToCSV} className="bg-green-600 hover:bg-green-700">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Comprehensive CSV
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

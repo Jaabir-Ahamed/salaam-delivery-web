@@ -763,6 +763,91 @@ export class SupabaseService {
     }
   }
 
+  /**
+   * Get comprehensive delivery data for CSV export with all requested fields
+   * @param month - Optional month filter (YYYY-MM format)
+   * @returns Promise with comprehensive delivery data array or error
+   */
+  static async getComprehensiveDeliveryData(month?: string) {
+    try {
+      let query = supabase
+        .from("deliveries")
+        .select(`
+          id,
+          delivery_date,
+          status,
+          delivery_method,
+          notes,
+          language_barrier_encountered,
+          translation_needed,
+          created_at,
+          completed_at,
+          seniors (
+            id,
+            name,
+            age,
+            household_type,
+            family_adults,
+            family_children,
+            race_ethnicity,
+            health_conditions,
+            address,
+            building,
+            unit_apt,
+            zip_code,
+            dietary_restrictions,
+            phone,
+            emergency_contact,
+            has_smartphone,
+            preferred_language,
+            needs_translation,
+            delivery_method,
+            special_instructions,
+            created_at,
+            updated_at,
+            active
+          ),
+          volunteers (
+            id,
+            name,
+            email,
+            phone,
+            speaks_languages,
+            address,
+            role,
+            vehicle_type,
+            vehicle_capacity,
+            experience_level,
+            special_skills,
+            emergency_contact,
+            notes,
+            created_at,
+            updated_at,
+            active
+          )
+        `)
+        .order("delivery_date", { ascending: false })
+
+      if (month) {
+        const startDate = `${month}-01`
+        const [yearStr, monthStr] = month.split('-')
+        const year = parseInt(yearStr)
+        const monthNum = parseInt(monthStr)
+        const lastDay = getLastDayOfMonth(year, monthNum)
+        const endDate = `${month}-${lastDay.toString().padStart(2, "0")}`
+        query = query.gte("delivery_date", startDate).lte("delivery_date", endDate)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      return { data: data || [], error: null }
+    } catch (error: any) {
+      console.error("Error fetching comprehensive delivery data:", error)
+      return { data: [], error }
+    }
+  }
+
   // ============================================================================
   // SENIOR ASSIGNMENT METHODS
   // ============================================================================

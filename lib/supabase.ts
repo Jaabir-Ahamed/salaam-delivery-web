@@ -135,6 +135,8 @@ export interface Senior {
   needs_translation: boolean
   delivery_method: "doorstep" | "phone_confirmed" | "family_member"
   special_instructions: string | null
+  senior_type: string | null
+  disability: string | null
   created_at: string
   updated_at: string
   active: boolean

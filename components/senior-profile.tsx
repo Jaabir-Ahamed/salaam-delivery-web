@@ -199,6 +199,26 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
                 </div>
               )}
             </div>
+            
+            {/* Senior Type and Disability */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {senior.senior_type && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Senior Type</Label>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mt-1">
+                    {senior.senior_type}
+                  </Badge>
+                </div>
+              )}
+              {senior.disability && senior.disability !== "None" && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Disability</Label>
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 mt-1">
+                    {senior.disability}
+                  </Badge>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

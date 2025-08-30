@@ -40,6 +40,8 @@ export function SeniorRegistrationForm({ onNavigate, onSuccess, editingSenior }:
     needs_translation: editingSenior?.needs_translation || false,
     delivery_method: editingSenior?.delivery_method || "doorstep",
     special_instructions: editingSenior?.special_instructions || "",
+    senior_type: editingSenior?.senior_type || "",
+    disability: editingSenior?.disability || "",
   })
 
   const handleInputChange = (field: string, value: any) => {
@@ -58,6 +60,8 @@ export function SeniorRegistrationForm({ onNavigate, onSuccess, editingSenior }:
         building: null, // Add missing required field
         unit_apt: null, // Add missing required field
         zip_code: null, // Add missing required field
+        senior_type: formData.senior_type,
+        disability: formData.disability,
       }
 
       if (editingSenior) {
@@ -84,6 +88,8 @@ export function SeniorRegistrationForm({ onNavigate, onSuccess, editingSenior }:
     { value: "bengali", label: "Bengali" },
     { value: "punjabi", label: "Punjabi" },
     { value: "farsi", label: "Farsi" },
+    { value: "mandarin", label: "Mandarin" },
+    { value: "chinese", label: "Chinese" },
     { value: "other", label: "Other" },
   ]
 
@@ -292,6 +298,48 @@ export function SeniorRegistrationForm({ onNavigate, onSuccess, editingSenior }:
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Senior Type */}
+              <div className="space-y-2">
+                <Label htmlFor="senior_type">Senior Type *</Label>
+                <Select
+                  value={formData.senior_type}
+                  onValueChange={(value) => handleInputChange("senior_type", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select senior type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Veterans">Veterans</SelectItem>
+                    <SelectItem value="Independent">Independent</SelectItem>
+                    <SelectItem value="Assisted Living">Assisted Living</SelectItem>
+                    <SelectItem value="Memory Care">Memory Care</SelectItem>
+                    <SelectItem value="Nursing Home">Nursing Home</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Disability */}
+              <div className="space-y-2">
+                <Label htmlFor="disability">Disability</Label>
+                <Select
+                  value={formData.disability}
+                  onValueChange={(value) => handleInputChange("disability", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select disability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Mobility">Mobility</SelectItem>
+                    <SelectItem value="Vision">Vision</SelectItem>
+                    <SelectItem value="Hearing">Hearing</SelectItem>
+                    <SelectItem value="Cognitive">Cognitive</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Race/Ethnicity */}
               <div className="space-y-2">

@@ -252,6 +252,18 @@ export function ManageSeniors({ onNavigate, onEditSenior }: ManageSeniorsProps) 
 
                   {/* Additional Info */}
                   <div className="ml-15 space-y-2">
+                    {senior.senior_type && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">Type: </span>
+                        <span className="text-sm text-gray-700">{senior.senior_type}</span>
+                      </div>
+                    )}
+                    {senior.disability && senior.disability !== "None" && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">Disability: </span>
+                        <span className="text-sm text-gray-700">{senior.disability}</span>
+                      </div>
+                    )}
                     {senior.dietary_restrictions && (
                       <div>
                         <span className="text-xs font-medium text-gray-500">Dietary: </span>

@@ -59,6 +59,8 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
     needs_translation: false,
     delivery_method: "doorstep" as "doorstep" | "phone_confirmed" | "family_member",
     special_instructions: "",
+    senior_type: "",
+    disability: "",
     active: true
   })
 
@@ -126,6 +128,8 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
       needs_translation: false,
       delivery_method: "doorstep",
       special_instructions: "",
+      senior_type: "",
+      disability: "",
       active: true
     })
     setEditingSenior(null)
@@ -144,7 +148,9 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
         family_children: parseInt(formData.family_children),
         building: null, // Add missing required field
         unit_apt: null, // Add missing required field
-        zip_code: null // Add missing required field
+        zip_code: null, // Add missing required field
+        senior_type: formData.senior_type,
+        disability: formData.disability
       }
 
       if (editingSenior) {
@@ -196,6 +202,8 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
       needs_translation: senior.needs_translation,
       delivery_method: senior.delivery_method,
       special_instructions: senior.special_instructions || "",
+      senior_type: senior.senior_type || "",
+      disability: senior.disability || "",
       active: senior.active
     })
     setIsAddDialogOpen(true)
@@ -409,6 +417,43 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
                 </div>
               </div>
 
+              {/* Senior Type and Disability */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="senior_type">Senior Type</Label>
+                  <Select value={formData.senior_type} onValueChange={(value) => 
+                    setFormData({...formData, senior_type: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="veterans">Veterans</SelectItem>
+                      <SelectItem value="independent">Independent</SelectItem>
+                      <SelectItem value="assisted">Assisted</SelectItem>
+                      <SelectItem value="nursing">Nursing</SelectItem>
+                      <SelectItem value="memory_care">Memory Care</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="disability">Disability</Label>
+                  <Select value={formData.disability} onValueChange={(value) => 
+                    setFormData({...formData, disability: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="mobility">Mobility</SelectItem>
+                      <SelectItem value="vision">Vision</SelectItem>
+                      <SelectItem value="hearing">Hearing</SelectItem>
+                      <SelectItem value="cognitive">Cognitive</SelectItem>
+                      <SelectItem value="mental">Mental</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Delivery Method */}
               <div>
                 <Label htmlFor="delivery_method">Delivery Method</Label>
@@ -541,6 +586,12 @@ export function SeniorManagement({ onDataChange }: SeniorManagementProps) {
                         )}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
+                        {senior.senior_type && (
+                          <Badge variant="secondary">Type: {senior.senior_type}</Badge>
+                        )}
+                        {senior.disability && senior.disability !== "None" && (
+                          <Badge variant="secondary">Disability: {senior.disability}</Badge>
+                        )}
                         {senior.dietary_restrictions && (
                           <Badge variant="secondary">Dietary: {senior.dietary_restrictions}</Badge>
                         )}

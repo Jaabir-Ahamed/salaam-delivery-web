@@ -16,9 +16,9 @@ import {
   Trash2,
   TrendingUp,
   Users,
-  Milk,
-  Bread,
-  Egg,
+  Package,
+  ShoppingBag,
+  CircleDot,
   DollarSign,
   BarChart3
 } from "lucide-react"
@@ -520,15 +520,15 @@ export function DeliveryTracker() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-center">
-                      <Milk className="w-4 h-4 mx-auto" />
+                      <Package className="w-4 h-4 mx-auto" />
                       Milk
                     </TableHead>
                     <TableHead className="text-center">
-                      <Bread className="w-4 h-4 mx-auto" />
+                      <ShoppingBag className="w-4 h-4 mx-auto" />
                       Bread
                     </TableHead>
                     <TableHead className="text-center">
-                      <Egg className="w-4 h-4 mx-auto" />
+                      <CircleDot className="w-4 h-4 mx-auto" />
                       Eggs
                     </TableHead>
                     <TableHead>Misc Items</TableHead>

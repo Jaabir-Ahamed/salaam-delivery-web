@@ -364,6 +364,13 @@ export function ReportsGeneration() {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
+        {/* Debug Info */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800 font-medium">Debug Info:</p>
+          <p className="text-blue-700 text-sm">Tabs component loaded. You should see 3 tabs above.</p>
+          <p className="text-blue-700 text-sm">If you don't see the Delivery Tracker tab, there may be a rendering issue.</p>
+        </div>
+
         {/* Reports Generation Tab */}
         <TabsContent value="reports" className="space-y-6">
           {/* Report Configuration */}
@@ -655,6 +662,10 @@ export function ReportsGeneration() {
 
         {/* Delivery Tracker Tab */}
         <TabsContent value="delivery-tracker">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+            <p className="text-green-800 font-medium">Delivery Tracker Tab Active!</p>
+            <p className="text-green-700 text-sm">This tab contains the delivery tracker with executive summary dashboard.</p>
+          </div>
           <DeliveryTracker />
         </TabsContent>
 

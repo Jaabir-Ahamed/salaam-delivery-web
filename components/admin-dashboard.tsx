@@ -31,6 +31,7 @@ import { VolunteerManagement } from "./volunteer-management"
 import { ReportsGeneration } from "./reports-generation"
 import { AnalyticsDashboard } from "./analytics-dashboard"
 import { CSVImport } from "./csv-import"
+import { DeliveryTracker } from "./delivery-tracker"
 
 interface AdminDashboardProps {
   user: any
@@ -210,11 +211,12 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
 
       {/* Main Dashboard Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="seniors">Seniors</TabsTrigger>
           <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="delivery-tracker">Delivery Tracker</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
         </TabsList>
@@ -268,7 +270,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center gap-2"
@@ -299,6 +301,15 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center gap-2"
+                    onClick={() => setActiveTab("delivery-tracker")}
+                  >
+                    <Calendar className="h-6 w-6" />
+                    <span className="text-sm">Delivery Tracker</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center gap-2"
                     onClick={() => setActiveTab("import")}
                   >
                     <Upload className="h-6 w-6" />
@@ -320,6 +331,10 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
 
         <TabsContent value="reports">
           <ReportsGeneration />
+        </TabsContent>
+
+        <TabsContent value="delivery-tracker">
+          <DeliveryTracker />
         </TabsContent>
 
         <TabsContent value="analytics">

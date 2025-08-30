@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
-import { Calendar, CalendarCell, CalendarGrid, CalendarHeader, CalendarRow } from "@/components/ui/calendar"
 import { 
   Calendar as CalendarIcon,
   Download,
@@ -500,7 +499,7 @@ export function DeliveryTracker() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             Delivery Records - {new Date(selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </CardTitle>
           <CardDescription>

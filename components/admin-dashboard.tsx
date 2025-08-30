@@ -210,6 +210,28 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       </div>
 
       {/* Main Dashboard Tabs */}
+      
+      {/* DEBUG SECTION - This should be very visible */}
+      <div className="p-6 bg-yellow-100 border-4 border-yellow-500 rounded-lg mb-4">
+        <h1 className="text-2xl font-bold text-yellow-800">🔍 DEBUG: Admin Dashboard Component</h1>
+        <p className="text-lg text-yellow-700 mt-2">Active Tab: {activeTab}</p>
+        <p className="text-yellow-600 mt-1">If you can see this, the component is loading!</p>
+        <div className="mt-3 space-x-2">
+          <Button 
+            onClick={() => setActiveTab("delivery-tracker")}
+            className="bg-yellow-600 hover:bg-yellow-700"
+          >
+            Click to Go to Delivery Tracker
+          </Button>
+          <Button 
+            onClick={() => setActiveTab("overview")}
+            variant="outline"
+          >
+            Back to Overview
+          </Button>
+        </div>
+      </div>
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>

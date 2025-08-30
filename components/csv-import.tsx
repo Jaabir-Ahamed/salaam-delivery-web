@@ -44,6 +44,8 @@ interface CSVRow {
   needs_translation: string
   delivery_method: "doorstep" | "phone_confirmed" | "family_member"
   special_instructions: string
+  senior_type: string
+  disability: string
 }
 
 export function CSVImport({ onImportComplete }: CSVImportProps) {
@@ -123,7 +125,9 @@ export function CSVImport({ onImportComplete }: CSVImportProps) {
         preferred_language: rowData.preferred_language || rowData.language || 'english',
         needs_translation: rowData.needs_translation || rowData.translation || 'false',
         delivery_method: (rowData.delivery_method || 'doorstep') as "doorstep" | "phone_confirmed" | "family_member",
-        special_instructions: rowData.special_instructions || rowData.instructions || ''
+        special_instructions: rowData.special_instructions || rowData.instructions || '',
+        senior_type: rowData.senior_type || 'Independent',
+        disability: rowData.disability || 'None'
       }
     }).filter(row => row.name.trim()) // Filter out empty rows
   }
@@ -228,6 +232,8 @@ export function CSVImport({ onImportComplete }: CSVImportProps) {
         needs_translation: row.needs_translation.toLowerCase() === 'true',
         delivery_method: row.delivery_method,
         special_instructions: row.special_instructions || null,
+        senior_type: row.senior_type || "Independent",
+        disability: row.disability || "None",
         active: true
       }))
 
@@ -279,9 +285,9 @@ export function CSVImport({ onImportComplete }: CSVImportProps) {
   }
 
   const downloadTemplate = () => {
-    const template = `name,age,household_type,family_adults,family_children,race_ethnicity,health_conditions,address,dietary_restrictions,phone,emergency_contact,has_smartphone,preferred_language,needs_translation,delivery_method,special_instructions
-John Doe,75,single,1,0,White,Diabetes,123 Main St,None,555-0123,Jane Doe (555-0124),true,english,false,doorstep,Leave at front door
-Maria Garcia,68,family,2,1,Hispanic,None,456 Oak Ave,Gluten-free,555-0125,Carlos Garcia (555-0126),false,spanish,true,phone_confirmed,Call before delivery`
+    const template = `name,age,household_type,family_adults,family_children,race_ethnicity,health_conditions,address,dietary_restrictions,phone,emergency_contact,has_smartphone,preferred_language,needs_translation,delivery_method,special_instructions,senior_type,disability
+John Doe,75,single,1,0,White,Diabetes,123 Main St,None,555-0123,Jane Doe (555-0124),true,english,false,doorstep,Leave at front door,Independent,None
+Maria Garcia,68,family,2,1,Hispanic,None,456 Oak Ave,Gluten-free,555-0125,Carlos Garcia (555-0126),false,spanish,true,phone_confirmed,Call before delivery,Independent,None`
     
     const blob = new Blob([template], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
@@ -329,6 +335,8 @@ Maria Garcia,68,family,2,1,Hispanic,None,456 Oak Ave,Gluten-free,555-0125,Carlos
       delivery_method: "doorstep" as const, // Add missing required field
       dietary_restrictions: row['Special Instructions'] || null,
       special_instructions: row['Reference'] || null,
+      senior_type: "Independent", // Add missing required field
+      disability: "None", // Add missing required field
       active: true
     })).filter(senior => senior.name !== 'Resident' && senior.unit_apt);
 
@@ -463,6 +471,12 @@ Maria Garcia,68,family,2,1,Hispanic,None,456 Oak Ave,Gluten-free,555-0125,Carlos
                       </div>
                       <div>
                         <strong>Language:</strong> {row.preferred_language} {row.needs_translation === 'true' && '(needs translation)'}
+                      </div>
+                      <div>
+                        <strong>Senior Type:</strong> {row.senior_type}
+                      </div>
+                      <div>
+                        <strong>Disability:</strong> {row.disability}
                       </div>
                     </div>
                   </div>

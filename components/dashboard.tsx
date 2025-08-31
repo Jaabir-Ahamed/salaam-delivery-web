@@ -356,6 +356,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Executive Summary Card */}
+              <Card
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => onNavigate("executive-summary")}
+              >
+                <CardContent className="p-6 sm:p-8">
+                  <div className="flex items-center space-x-4 sm:space-x-5">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 text-base sm:text-lg mb-1">Executive Summary</h3>
+                      <p className="text-sm text-gray-600">Delivery tracking & analytics</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>

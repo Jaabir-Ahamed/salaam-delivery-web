@@ -19,6 +19,7 @@ import { CSVImport } from "@/components/csv-import"
 import { VolunteerManagement } from "@/components/volunteer-management"
 import { SeniorAssignments } from "@/components/senior-assignments"
 import { EnvSetupGuide } from "@/components/env-setup-guide"
+import { ExecutiveSummary } from "@/components/executive-summary"
 import type { Senior } from "@/lib/supabase"
 import { DeliveryProvider } from "@/contexts/delivery-context"
 
@@ -38,6 +39,7 @@ type AppPage =
   | "manage-volunteers"
   | "senior-assignments"
   | "env-setup"
+  | "executive-summary"
 
 /**
  * Main application content component
@@ -222,6 +224,12 @@ function AppContent() {
       return <SeniorAssignments onNavigate={handleNavigate} />
     case "env-setup":
       return <EnvSetupGuide onNavigate={handleNavigate} />
+    case "executive-summary":
+      // Admin-only page - redirect non-admins to dashboard
+      if (user.role !== "admin" && user.role !== "super_admin") {
+        return <Dashboard onNavigate={handleNavigate} />
+      }
+      return <ExecutiveSummary onNavigate={handleNavigate} />
     default:
       // Default to dashboard for authenticated users
       return <Dashboard onNavigate={handleNavigate} />

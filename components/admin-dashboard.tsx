@@ -31,7 +31,7 @@ import { VolunteerManagement } from "./volunteer-management"
 import { ReportsGeneration } from "./reports-generation"
 import { AnalyticsDashboard } from "./analytics-dashboard"
 import { CSVImport } from "./csv-import"
-import { DeliveryTracker } from "./delivery-tracker"
+import { ExecutiveSummary } from "./executive-summary"
 
 interface AdminDashboardProps {
   user: any
@@ -210,35 +210,12 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       </div>
 
       {/* Main Dashboard Tabs */}
-      
-      {/* DEBUG SECTION - This should be very visible */}
-      <div className="p-6 bg-yellow-100 border-4 border-yellow-500 rounded-lg mb-4">
-        <h1 className="text-2xl font-bold text-yellow-800">🔍 DEBUG: Admin Dashboard Component</h1>
-        <p className="text-lg text-yellow-700 mt-2">Active Tab: {activeTab}</p>
-        <p className="text-yellow-600 mt-1">If you can see this, the component is loading!</p>
-        <div className="mt-3 space-x-2">
-          <Button 
-            onClick={() => setActiveTab("delivery-tracker")}
-            className="bg-yellow-600 hover:bg-yellow-700"
-          >
-            Click to Go to Delivery Tracker
-          </Button>
-          <Button 
-            onClick={() => setActiveTab("overview")}
-            variant="outline"
-          >
-            Back to Overview
-          </Button>
-        </div>
-      </div>
-      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="seniors">Seniors</TabsTrigger>
           <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="delivery-tracker">Delivery Tracker</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
         </TabsList>
@@ -292,7 +269,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center gap-2"
@@ -323,19 +300,19 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center gap-2"
-                    onClick={() => setActiveTab("delivery-tracker")}
-                  >
-                    <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Delivery Tracker</span>
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="h-auto p-4 flex flex-col items-center gap-2"
                     onClick={() => setActiveTab("import")}
                   >
                     <Upload className="h-6 w-6" />
                     <span className="text-sm">Import CSV</span>
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center gap-2"
+                    onClick={() => setActiveTab("executive-summary")}
+                  >
+                    <BarChart3 className="h-6 w-6" />
+                    <span className="text-sm">Executive Summary</span>
                   </Button>
                 </div>
               </CardContent>
@@ -355,16 +332,16 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           <ReportsGeneration />
         </TabsContent>
 
-        <TabsContent value="delivery-tracker">
-          <DeliveryTracker />
-        </TabsContent>
-
         <TabsContent value="analytics">
           <AnalyticsDashboard />
         </TabsContent>
 
         <TabsContent value="import">
           <CSVImport onImportComplete={loadDashboardData} />
+        </TabsContent>
+
+        <TabsContent value="executive-summary">
+          <ExecutiveSummary onNavigate={(page) => setActiveTab(page)} />
         </TabsContent>
       </Tabs>
     </div>

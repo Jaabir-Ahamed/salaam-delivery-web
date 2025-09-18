@@ -20,9 +20,12 @@ import {
   Globe,
   Smartphone,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Download,
+  FileText
 } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
+import { exportAnalyticsCSV, exportDeliveriesCSV, exportToPDF } from "@/lib/export-utils"
 
 export function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState("month")
@@ -137,6 +140,22 @@ export function AnalyticsDashboard() {
       .slice(0, 5)
   }
 
+  const handleExportAnalyticsCSV = () => {
+    if (analyticsData) {
+      exportAnalyticsCSV(analyticsData)
+    }
+  }
+
+  const handleExportDeliveriesCSV = () => {
+    if (analyticsData?.deliveries) {
+      exportDeliveriesCSV(analyticsData.deliveries)
+    }
+  }
+
+  const handleExportPDF = () => {
+    exportToPDF('analytics-dashboard-content', 'analytics-dashboard', 'Analytics Dashboard')
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -149,7 +168,7 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="analytics-dashboard-content" className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -169,6 +188,33 @@ export function AnalyticsDashboard() {
           </Select>
           <Button onClick={loadAnalytics} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportAnalyticsCSV}
+            className="flex items-center space-x-2"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export Analytics CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportDeliveriesCSV}
+            className="flex items-center space-x-2"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export Deliveries CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            className="flex items-center space-x-2"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Export PDF</span>
           </Button>
         </div>
       </div>

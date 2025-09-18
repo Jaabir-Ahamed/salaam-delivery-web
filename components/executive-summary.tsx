@@ -16,9 +16,12 @@ import {
   Edit,
   Save,
   X,
-  Plus
+  Plus,
+  Download,
+  FileText
 } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
+import { exportExecutiveSummaryCSV, exportToPDF } from "@/lib/export-utils"
 
 interface DeliveryRecord {
   id?: string
@@ -153,26 +156,56 @@ export function ExecutiveSummary({ onNavigate }: ExecutiveSummaryProps) {
     return delivery.milk_gallons + delivery.bread_delivered + delivery.egg_trays
   }
 
+  const handleExportCSV = () => {
+    exportExecutiveSummaryCSV(deliveries)
+  }
+
+  const handleExportPDF = () => {
+    exportToPDF('executive-summary-content', 'executive-summary', 'Executive Summary & Delivery Tracker')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" onClick={() => onNavigate("dashboard")}>
-              <X className="w-4 h-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Executive Summary & Delivery Tracker
-              </h1>
-              <p className="text-sm text-gray-600">Track monthly deliveries and performance metrics</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="sm" onClick={() => onNavigate("dashboard")}>
+                <X className="w-4 h-4" />
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Executive Summary & Delivery Tracker
+                </h1>
+                <p className="text-sm text-gray-600">Track monthly deliveries and performance metrics</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Export CSV</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPDF}
+                className="flex items-center space-x-2"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Export PDF</span>
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div id="executive-summary-content" className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>

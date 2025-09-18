@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import { useDelivery } from "@/contexts/delivery-context"
-import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react"
+import { ArrowLeft, Phone, Navigation, MapPin, AlertCircle, CheckCircle2, Clock, Loader2, X } from "lucide-react"
 import { SupabaseService } from "@/lib/supabase-service"
 import { useAuth } from "@/contexts/auth-context"
+import { useState } from "react"
 
 interface DeliveryChecklistProps {
   onNavigate: (page: string) => void
@@ -25,6 +29,17 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
   } = useDelivery()
   
   const { user } = useAuth()
+  
+  // State for not delivered dialog
+  const [notDeliveredDialog, setNotDeliveredDialog] = useState<{
+    isOpen: boolean
+    seniorId: string | null
+    reason: 'not_home' | 'not_needed' | 'no_answer' | null
+  }>({
+    isOpen: false,
+    seniorId: null,
+    reason: null
+  })
 
   // Calculate counts from the data
   const completedCount = Object.values(deliveryStatus).filter(status => status.isDelivered).length
@@ -63,6 +78,75 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
       }
     }
     await refreshData()
+  }
+
+  const handleNotDelivered = (seniorId: string) => {
+    setNotDeliveredDialog({
+      isOpen: true,
+      seniorId,
+      reason: null
+    })
+  }
+
+  const handleNotDeliveredSubmit = async () => {
+    if (!notDeliveredDialog.seniorId || !notDeliveredDialog.reason) return
+
+    try {
+      const delivery = deliveries.find(d => d.senior_id === notDeliveredDialog.seniorId)
+      
+      // Optimistic update
+      updateDeliveryStatus(notDeliveredDialog.seniorId, "not_delivered", notDeliveredDialog.reason)
+      
+      if (delivery) {
+        const result = await SupabaseService.updateDelivery(delivery.id, { 
+          status: "not_delivered",
+          not_delivered_reason: notDeliveredDialog.reason
+        })
+        
+        if (!result.success) {
+          console.error("Failed to update delivery:", result.error)
+          // Revert optimistic update on error
+          updateDeliveryStatus(notDeliveredDialog.seniorId, "pending")
+        }
+      } else {
+        // Create a delivery record if it doesn't exist
+        if (user?.id) {
+          const today = new Date().toISOString().split('T')[0]
+          const result = await SupabaseService.createDelivery({
+            senior_id: notDeliveredDialog.seniorId,
+            volunteer_id: user.id,
+            delivery_date: today,
+            status: "not_delivered",
+            not_delivered_reason: notDeliveredDialog.reason
+          })
+          
+          if (!result.data) {
+            console.error("Failed to create delivery record:", result.error)
+            // Revert optimistic update on error
+            updateDeliveryStatus(notDeliveredDialog.seniorId, "pending")
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating delivery status:", error)
+      // Revert optimistic update on error
+      updateDeliveryStatus(notDeliveredDialog.seniorId!, "pending")
+    } finally {
+      setNotDeliveredDialog({
+        isOpen: false,
+        seniorId: null,
+        reason: null
+      })
+    }
+  }
+
+  const getNotDeliveredReasonText = (reason: 'not_home' | 'not_needed' | 'no_answer') => {
+    switch (reason) {
+      case 'not_home': return 'Not Home'
+      case 'not_needed': return 'Not Needed'
+      case 'no_answer': return 'No Answer'
+      default: return 'Unknown'
+    }
   }
 
   if (isLoading) {
@@ -204,6 +288,11 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               Completed
                             </Badge>
+                          ) : seniorDeliveryStatus.status === "not_delivered" ? (
+                            <Badge className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-1">
+                              <X className="w-3 h-3 mr-1" />
+                              Not Delivered
+                            </Badge>
                           ) : (
                             <Badge variant="outline" className="border-orange-200 text-orange-700 text-xs px-2 py-1">
                               <Clock className="w-3 h-3 mr-1" />
@@ -242,6 +331,20 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                     </div>
                   )}
 
+                  {/* Not Delivered Reason */}
+                  {seniorDeliveryStatus.status === "not_delivered" && seniorDeliveryStatus.notDeliveredReason && (
+                    <div className="ml-9">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <div className="flex items-start space-x-2">
+                          <X className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-red-800 leading-relaxed">
+                            <span className="font-medium">Not Delivered:</span> {getNotDeliveredReasonText(seniorDeliveryStatus.notDeliveredReason)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="ml-9 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
                     <Button
@@ -264,6 +367,17 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                       <Navigation className="w-4 h-4 mr-2" />
                       Directions
                     </Button>
+                    {seniorDeliveryStatus.status !== "not_delivered" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleNotDelivered(senior.id)}
+                        className="flex items-center justify-center min-h-[44px] flex-1 sm:flex-none border-red-200 text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Not Delivered
+                      </Button>
+                    )}
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white font-semibold min-h-[44px] flex-1 sm:flex-none"
                       onClick={() => onSelectSenior(senior.id)}
@@ -303,6 +417,49 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
           </CardContent>
         </Card>
       </div>
+
+      {/* Not Delivered Dialog */}
+      <Dialog open={notDeliveredDialog.isOpen} onOpenChange={(open) => setNotDeliveredDialog(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Why wasn't this delivery completed?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <RadioGroup
+              value={notDeliveredDialog.reason || ""}
+              onValueChange={(value) => setNotDeliveredDialog(prev => ({ ...prev, reason: value as 'not_home' | 'not_needed' | 'no_answer' }))}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="not_home" id="not_home" />
+                <Label htmlFor="not_home" className="text-sm font-medium">Not Home</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="not_needed" id="not_needed" />
+                <Label htmlFor="not_needed" className="text-sm font-medium">Not Needed</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no_answer" id="no_answer" />
+                <Label htmlFor="no_answer" className="text-sm font-medium">No Answer</Label>
+              </div>
+            </RadioGroup>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setNotDeliveredDialog({ isOpen: false, seniorId: null, reason: null })}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleNotDeliveredSubmit}
+                disabled={!notDeliveredDialog.reason}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Mark as Not Delivered
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

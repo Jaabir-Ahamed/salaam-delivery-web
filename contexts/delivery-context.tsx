@@ -11,12 +11,13 @@ import type { Senior, Delivery } from "@/lib/supabase"
 
 /**
  * Delivery status interface for tracking delivery state
- * Includes delivery status and any notes
+ * Includes delivery status, notes, and not delivered reasons
  */
 interface DeliveryStatus {
   isDelivered: boolean
   status: string
   notes?: string
+  notDeliveredReason?: 'not_home' | 'not_needed' | 'no_answer'
 }
 
 /**
@@ -30,7 +31,7 @@ interface DeliveryContextType {
   deliveryStatus: Record<string, DeliveryStatus>
   getDeliveryStatus: (seniorId: string) => DeliveryStatus
   refreshData: () => Promise<void>
-  updateDeliveryStatus: (seniorId: string, status: string) => void
+  updateDeliveryStatus: (seniorId: string, status: string, notDeliveredReason?: 'not_home' | 'not_needed' | 'no_answer') => void
 }
 
 // ============================================================================
@@ -190,7 +191,8 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
             newDeliveryStatus[delivery.senior_id] = {
               isDelivered: delivery.status === "delivered" || delivery.status === "family_confirmed",
               status: delivery.status || "pending",
-              notes: delivery.notes
+              notes: delivery.notes,
+              notDeliveredReason: delivery.not_delivered_reason || undefined
             }
           }
         })
@@ -247,14 +249,16 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
    * Update delivery status locally without triggering full data reload
    * @param seniorId - Senior's unique identifier
    * @param status - New delivery status
+   * @param notDeliveredReason - Reason for not delivered status (optional)
    */
-  const updateDeliveryStatus = (seniorId: string, status: string) => {
+  const updateDeliveryStatus = (seniorId: string, status: string, notDeliveredReason?: 'not_home' | 'not_needed' | 'no_answer') => {
     setDeliveryStatus(prev => ({
       ...prev,
       [seniorId]: {
         ...prev[seniorId],
         isDelivered: status === "delivered" || status === "family_confirmed",
-        status: status
+        status: status,
+        notDeliveredReason: status === "not_delivered" ? notDeliveredReason : undefined
       }
     }))
   }

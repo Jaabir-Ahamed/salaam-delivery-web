@@ -693,6 +693,7 @@ export class SupabaseService {
     delivery_date: string
     status?: string
     notes?: string
+    not_delivered_reason?: "not_home" | "not_needed" | "no_answer"
   }) {
     try {
       const { data, error } = await supabase
@@ -700,7 +701,8 @@ export class SupabaseService {
         .insert({
           ...deliveryData,
           status: deliveryData.status || "pending",
-          notes: deliveryData.notes || ""
+          notes: deliveryData.notes || "",
+          not_delivered_reason: deliveryData.not_delivered_reason || null
         })
         .select()
         .single()

@@ -179,9 +179,10 @@ export interface Delivery {
   senior_id: string
   volunteer_id: string
   delivery_date: string
-  status: "pending" | "delivered" | "missed" | "no_contact" | "family_confirmed"
+  status: "pending" | "delivered" | "missed" | "no_contact" | "family_confirmed" | "not_delivered"
   delivery_method: "doorstep" | "phone_confirmed" | "family_member" | null
   notes: string | null
+  not_delivered_reason: "not_home" | "not_needed" | "no_answer" | null
   language_barrier_encountered: boolean
   translation_needed: boolean
   created_at: string

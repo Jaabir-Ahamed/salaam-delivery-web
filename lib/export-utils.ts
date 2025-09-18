@@ -18,12 +18,22 @@ export function exportToCSV<T extends Record<string, any>>(
     return
   }
 
+  // Transform data if headers mapping is provided
+  let processedData: any[] = data
+  if (headers) {
+    processedData = data.map(item => {
+      const transformedItem: Record<string, any> = {}
+      Object.keys(item).forEach(key => {
+        const newKey = headers[key as keyof T] || key
+        transformedItem[newKey] = item[key]
+      })
+      return transformedItem
+    })
+  }
+
   // Convert data to CSV format
-  const csv = Papa.unparse(data, {
-    header: true,
-    headerTransform: (header) => {
-      return headers?.[header as keyof T] || header
-    }
+  const csv = Papa.unparse(processedData, {
+    header: true
   })
 
   // Create and download file

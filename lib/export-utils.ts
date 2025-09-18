@@ -21,7 +21,7 @@ export function exportToCSV<T extends Record<string, any>>(
   // Convert data to CSV format
   const csv = Papa.unparse(data, {
     header: true,
-    transformHeader: (header) => {
+    headerTransform: (header) => {
       return headers?.[header as keyof T] || header
     }
   })

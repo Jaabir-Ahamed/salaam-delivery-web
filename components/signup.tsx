@@ -23,7 +23,7 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
     confirmPassword: "",
     name: "",
     phone: "",
-    role: "volunteer",
+    role: "volunteer", // Always volunteer for new signups
     languages: ["english"],
   })
   const [error, setError] = useState("")
@@ -70,14 +70,8 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
       return false
     }
 
-    // Admin-specific validation
-    if (formData.role === "admin") {
-      if (!formData.phone) {
-        setError("Phone number is required for admin accounts")
-        return false
-      }
-      
-      // Validate phone number format
+    // Phone number validation (optional for volunteers)
+    if (formData.phone) {
       const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
       if (!phoneRegex.test(formData.phone.replace(/[\s\-\(\)]/g, ''))) {
         setError("Please enter a valid phone number")
@@ -152,10 +146,7 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
                 <li>1. Check your email inbox (and spam folder)</li>
                 <li>2. Click the confirmation link in the email</li>
                 <li>3. You'll be redirected back to this app</li>
-                <li>4. Sign in with your new account</li>
-                {formData.role === "admin" && (
-                  <li className="font-semibold text-green-700">5. You'll have admin privileges after confirmation</li>
-                )}
+                <li>4. Sign in with your new volunteer account</li>
               </ol>
             </div>
 
@@ -212,20 +203,15 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">
-                Phone Number {formData.role === "admin" && <span className="text-red-500">*</span>}
-              </Label>
+              <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
                 type="tel"
                 placeholder="(555) 123-4567"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                required={formData.role === "admin"}
               />
-              {formData.role === "admin" && (
-                <p className="text-xs text-gray-600">Required for admin accounts for emergency contact</p>
-              )}
+              <p className="text-xs text-gray-600">Optional - helps with delivery coordination</p>
             </div>
 
             <div className="space-y-2">
@@ -252,23 +238,6 @@ export function Signup({ onNavigateToLogin }: SignupProps) {
               />
             </div>
 
-            <div className="space-y-3">
-              <Label>Role *</Label>
-              <RadioGroup
-                value={formData.role}
-                onValueChange={(value) => handleInputChange("role", value)}
-                className="flex space-x-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="volunteer" id="volunteer" />
-                  <Label htmlFor="volunteer">Volunteer</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="admin" id="admin" />
-                  <Label htmlFor="admin">Admin</Label>
-                </div>
-              </RadioGroup>
-            </div>
 
             {/* Language Skills */}
             <Card className="bg-blue-50 border-blue-200">

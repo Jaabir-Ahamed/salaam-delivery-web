@@ -24,6 +24,7 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
     deliveries,
     isLoading,
     deliveryStatus,
+    getAssignmentNotes,
     refreshData,
     updateDeliveryStatus
   } = useDelivery()
@@ -326,6 +327,21 @@ export function DeliveryChecklist({ onNavigate, onSelectSenior }: DeliveryCheckl
                         <div className="flex items-start space-x-2">
                           <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-amber-800 leading-relaxed">{senior.special_instructions}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assignment Notes */}
+                  {getAssignmentNotes(senior.id) && (
+                    <div className="ml-9">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-start space-x-2">
+                          <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800 mb-1">Assignment Notes</p>
+                            <p className="text-sm text-blue-800 leading-relaxed">{getAssignmentNotes(senior.id)}</p>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -27,9 +27,11 @@ interface DeliveryStatus {
 interface DeliveryContextType {
   seniors: Senior[]
   deliveries: Delivery[]
+  assignments: any[]
   isLoading: boolean
   deliveryStatus: Record<string, DeliveryStatus>
   getDeliveryStatus: (seniorId: string) => DeliveryStatus
+  getAssignmentNotes: (seniorId: string) => string | null
   refreshData: () => Promise<void>
   updateDeliveryStatus: (seniorId: string, status: string, notDeliveredReason?: 'not_home' | 'not_needed' | 'no_answer') => void
 }
@@ -59,6 +61,7 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
   // State for senior and delivery data
   const [seniors, setSeniors] = useState<Senior[]>([])
   const [deliveries, setDeliveries] = useState<Delivery[]>([])
+  const [assignments, setAssignments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
   // Delivery status tracking for each senior
@@ -74,6 +77,16 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
       isDelivered: false,
       status: "pending"
     }
+  }
+
+  /**
+   * Get assignment notes for a specific senior
+   * @param seniorId - Senior's unique identifier
+   * @returns Assignment notes string or null
+   */
+  const getAssignmentNotes = (seniorId: string): string | null => {
+    const assignment = assignments.find(a => a.senior_id === seniorId && a.status === "active")
+    return assignment?.notes || null
   }
 
   /**
@@ -125,6 +138,9 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
           )
           
           console.log("Volunteer assignments found:", volunteerAssignments.length)
+          
+          // Store assignments for later use
+          setAssignments(volunteerAssignments)
           
           // Extract senior IDs from assignments
           const seniorIds = volunteerAssignments.map((assignment: any) => assignment.senior_id)
@@ -292,9 +308,11 @@ export function DeliveryProvider({ children }: { children: React.ReactNode }) {
   const value: DeliveryContextType = {
     seniors,
     deliveries,
+    assignments,
     isLoading,
     deliveryStatus,
     getDeliveryStatus,
+    getAssignmentNotes,
     refreshData,
     updateDeliveryStatus,
   }

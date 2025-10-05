@@ -20,7 +20,7 @@ interface SeniorProfileProps {
 }
 
 export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProfileProps) {
-  const { seniors, deliveries, isLoading, deliveryStatus, refreshData, updateDeliveryStatus } = useDelivery()
+  const { seniors, deliveries, isLoading, deliveryStatus, getAssignmentNotes, refreshData, updateDeliveryStatus } = useDelivery()
   const { user } = useAuth()
   const [senior, setSenior] = useState<Senior | null>(null)
   const [deliveryNote, setDeliveryNote] = useState("")
@@ -308,6 +308,23 @@ export function SeniorProfile({ seniorId, onNavigate, previousPage }: SeniorProf
             )}
           </CardContent>
         </Card>
+
+        {/* Assignment Notes */}
+        {getAssignmentNotes(seniorId) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-blue-600" />
+                <span>Assignment Notes</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800 leading-relaxed">{getAssignmentNotes(seniorId)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Emergency Contact */}
         {senior.emergency_contact && (
